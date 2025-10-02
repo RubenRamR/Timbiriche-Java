@@ -9,6 +9,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
-        <exec.mainClass>com.mycompany.proyecto.timbiriche.ProyectoTimbiriche</exec.mainClass>
+        <exec.mainClass>timbiriche.app.Main</exec.mainClass>
     </properties>
 </project>

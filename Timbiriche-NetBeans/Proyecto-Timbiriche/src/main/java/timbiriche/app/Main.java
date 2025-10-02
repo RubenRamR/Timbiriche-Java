@@ -11,7 +11,7 @@ public class Main {
         ModelView modelView = new ModelView();
 
         // Back simulado
-        MotorJuego motor = new MotorJuegoSimulado();
+        MotorJuego motor = new MotorJuegoSimulado(TamanoTablero.PEQUENO);
 
         // Controller
         ControllerView controller = new ControllerView(modelView, motor);
