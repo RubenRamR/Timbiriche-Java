@@ -5,32 +5,36 @@ import timbiriche.controller.ControllerView;
 import timbiriche.modelView.*;
 import timbiriche.view.GameView;
 
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
 public class Main {
     public static void main(String[] args) {
-        // ModelView
-        ModelView modelView = new ModelView();
+        // Lanzar en EDT
+        SwingUtilities.invokeLater(() -> {
+            // Modelo-View
+            ModelView modelView = new ModelView();
 
-        // Back simulado
-        MotorJuego motor = new MotorJuegoSimulado(TamanoTablero.PEQUENO);
+            // Motor con tamaño (ajusta PEQUENO/MEDIANO/GRANDE)
+            MotorJuego motor = new MotorJuegoSimulado(TamanoTablero.PEQUENO);
 
-        // Controller
-        ControllerView controller = new ControllerView(modelView, motor);
+            // Controller
+            ControllerView controller = new ControllerView(modelView, motor);
 
-        // Vista (observa cambios; sin UI real)
-        GameView view = new GameView(modelView, controller);
-        modelView.agregarObservador(view);
+            // Vista Swing
+            GameView view = new GameView(modelView, controller);
+            modelView.agregarObservador(view);
 
-        // Inicializar tamaño
-        modelView.setTamano(TamanoTablero.PEQUENO);
+            // Inicializar tamaño en el modelo (dispara primer repaint)
+            modelView.setTamano(TamanoTablero.PEQUENO);
 
-        // Probar una jugada
-        Linea l = new Linea(0, 0, 1, 0);
-        controller.realizarJugada(l);
-
-        // Dump simple
-        EstadoVisual ev = modelView.getEstadoVisual();
-        System.out.println("Lineas: " + ev.getLineasDibujadas().size()
-                + " | Cuadros: " + ev.getCuadrosRellenos().size()
-                + " | Turno: " + ev.getTurnoActual());
+            // Frame
+            JFrame frame = new JFrame("Timbiriche (MVC/Fachada) — Demo");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setContentPane(view);
+            frame.pack();
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+        });
     }
 }
