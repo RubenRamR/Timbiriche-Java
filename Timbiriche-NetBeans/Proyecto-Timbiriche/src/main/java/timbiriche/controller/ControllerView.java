@@ -1,13 +1,23 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package timbiriche.controller;
 
-/**
- *
- * @author monic
- */
+import timbiriche.modelView.ModelViewModificable;
+import timbiriche.back.Linea;
+import timbiriche.back.MotorJuego;
+import timbiriche.back.ResultadoJugada;
+
 public class ControllerView {
-    
+
+    private final ModelViewModificable modelMod;
+    private final MotorJuego motorJuego;
+
+    public ControllerView(ModelViewModificable modeloModificable, MotorJuego motorJuego) {
+        this.modelMod = modeloModificable;
+        this.motorJuego = motorJuego;
+    }
+
+    /** CU: realizar jugada */
+    public void realizarJugada(Linea linea) {
+        ResultadoJugada r = motorJuego.procesarJugada(linea);
+        modelMod.setEstadoVisual(r);
+    }
 }
