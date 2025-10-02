@@ -8,7 +8,9 @@ public class ModelView implements ModelViewLeible, ModelViewModificable, Subject
 
     private final List<Observer> observadores = new ArrayList<>();
     private TamanoTablero tamanoSeleccionado;
+
     private final List<Linea> lineasDibujadas = new ArrayList<>();
+    private final List<Jugador> propietariosLineas = new ArrayList<>(); // NUEVO: dueño por línea
     private final List<Cuadro> cuadrosRellenos = new ArrayList<>();
     private Jugador turnoActual = Jugador.A;
 
@@ -19,13 +21,24 @@ public class ModelView implements ModelViewLeible, ModelViewModificable, Subject
     @Override public void quitarObservador(Observer o){ observadores.remove(o); }
     @Override public void notificarObservadores(){ for(Observer o: observadores) o.actualizar(); }
 
-    // Modificable
+    // ModelViewModificable
     @Override
     public void setEstadoVisual(ResultadoJugada datos) {
         if (datos == null) return;
-        if (datos.getLineaDibujada()!=null) lineasDibujadas.add(datos.getLineaDibujada());
-        if (datos.getCuadrosCompletados()!=null) cuadrosRellenos.addAll(datos.getCuadrosCompletados());
-        if (datos.getProximoTurno()!=null) turnoActual = datos.getProximoTurno();
+
+        // El jugador que hizo la jugada es el turnoActual ANTES de aplicar el resultado
+        Jugador jugadorQueJugo = turnoActual;
+
+        if (datos.getLineaDibujada()!=null) {
+            lineasDibujadas.add(datos.getLineaDibujada());
+            propietariosLineas.add(jugadorQueJugo); // registrar dueño de la línea
+        }
+        if (datos.getCuadrosCompletados()!=null) {
+            cuadrosRellenos.addAll(datos.getCuadrosCompletados());
+        }
+        if (datos.getProximoTurno()!=null) {
+            turnoActual = datos.getProximoTurno();
+        }
         notificarObservadores();
     }
 
@@ -33,16 +46,18 @@ public class ModelView implements ModelViewLeible, ModelViewModificable, Subject
     public void setTamano(TamanoTablero tamano) {
         this.tamanoSeleccionado = tamano;
         lineasDibujadas.clear();
+        propietariosLineas.clear(); // limpiar dueños también
         cuadrosRellenos.clear();
         turnoActual = Jugador.A;
         notificarObservadores();
     }
 
-    // Leible
+    // ModelViewLeible
     @Override
     public EstadoVisual getEstadoVisual() {
         return new EstadoVisual(
             new ArrayList<>(lineasDibujadas),
+            new ArrayList<>(propietariosLineas), // NUEVO: copia defensiva
             new ArrayList<>(cuadrosRellenos),
             turnoActual,
             tamanoSeleccionado
