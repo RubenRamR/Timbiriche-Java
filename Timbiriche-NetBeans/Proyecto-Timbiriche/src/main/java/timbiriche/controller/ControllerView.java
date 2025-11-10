@@ -15,7 +15,6 @@ public class ControllerView {
         this.motorJuego = motorJuego;
     }
 
-    /** CU: realizar jugada */
     public void realizarJugada(Linea linea) {
         ResultadoJugada r = motorJuego.procesarJugada(linea);
         modelMod.setEstadoVisual(r);

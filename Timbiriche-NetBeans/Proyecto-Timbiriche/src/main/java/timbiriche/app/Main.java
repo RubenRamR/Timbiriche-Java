@@ -16,7 +16,7 @@ public class Main {
             ModelView modelView = new ModelView();
 
             // Motor con tamaño (ajusta PEQUENO/MEDIANO/GRANDE)
-            MotorJuego motor = new MotorJuegoSimulado(TamanoTablero.PEQUENO);
+            MotorJuego motor = new MotorJuegoSimulado(TamanoTablero.MEDIANO);
 
             // Controller
             ControllerView controller = new ControllerView(modelView, motor);
@@ -26,7 +26,7 @@ public class Main {
             modelView.agregarObservador(view);
 
             // Inicializar tamaño en el modelo (dispara primer repaint)
-            modelView.setTamano(TamanoTablero.PEQUENO);
+            modelView.setTamano(TamanoTablero.MEDIANO);
 
             // Frame
             JFrame frame = new JFrame("Timbiriche (MVC/Fachada) — Demo");

@@ -20,11 +20,10 @@ import java.awt.event.MouseMotionAdapter;
 import java.util.List;
 
 /**
- * GameView: JPanel Swing que dibuja el tablero de Timbiriche.
- * - Observa el ModelView.
- * - Dibuja líneas/cuadros por color según jugador.
- * - Hover de línea candidata (color del jugador en turno).
- * - Convierte el clic en Linea y delega al controlador.
+ * GameView: JPanel Swing que dibuja el tablero de Timbiriche. - Observa el
+ * ModelView. - Dibuja líneas/cuadros por color según jugador. - Hover de línea
+ * candidata (color del jugador en turno). - Convierte el clic en Linea y delega
+ * al controlador.
  */
 public class GameView extends JPanel implements Observer {
 
@@ -44,9 +43,8 @@ public class GameView extends JPanel implements Observer {
     private static final Color COLOR_B_LINEA = new Color(200, 40, 40);
     private static final Color COLOR_B_CUADRO = new Color(255, 220, 210);
     private static final Color COLOR_GRID = new Color(60, 60, 60);
-    private static final Color COLOR_HOVER = new Color(0, 0, 0, 120); // se sobreescribe a color del turno
+    private static final Color COLOR_HOVER = new Color(0, 0, 0, 120); 
 
-    // Hover actual (puede ser nulo)
     private Linea hoverLinea = null;
 
     public GameView(ModelViewLeible modeloLeible, ControllerView controladorView) {
@@ -57,18 +55,19 @@ public class GameView extends JPanel implements Observer {
         inicializarListeners();
     }
 
-    // === Observer ===
     @Override
     public void actualizar() {
         SwingUtilities.invokeLater(this::repaint);
     }
 
-    // === Dibujo ===
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         EstadoVisual ev = modeloLeible.getEstadoVisual();
-        if (ev == null) return;
+        if (ev == null)
+        {
+            return;
+        }
 
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -84,8 +83,10 @@ public class GameView extends JPanel implements Observer {
 
         // 1) Cuadros rellenados por color de dueño
         List<Cuadro> cuadros = ev.getCuadrosRellenos();
-        if (cuadros != null) {
-            for (Cuadro c : cuadros) {
+        if (cuadros != null)
+        {
+            for (Cuadro c : cuadros)
+            {
                 int x = offsetX + c.getX() * cell;
                 int y = offsetY + c.getY() * cell;
                 g2.setColor(c.getDueno() == Jugador.A ? COLOR_A_CUADRO : COLOR_B_CUADRO);
@@ -96,9 +97,11 @@ public class GameView extends JPanel implements Observer {
         // 2) Líneas jugadas por color del propietario
         List<Linea> lineas = ev.getLineasDibujadas();
         List<Jugador> owners = ev.getPropietariosLineas();
-        if (lineas != null && owners != null && owners.size() == lineas.size()) {
+        if (lineas != null && owners != null && owners.size() == lineas.size())
+        {
             g2.setStroke(new BasicStroke(LINE_WIDTH, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-            for (int idx = 0; idx < lineas.size(); idx++) {
+            for (int idx = 0; idx < lineas.size(); idx++)
+            {
                 Linea l = lineas.get(idx);
                 Jugador j = owners.get(idx);
                 g2.setColor(j == Jugador.A ? COLOR_A_LINEA : COLOR_B_LINEA);
@@ -111,7 +114,8 @@ public class GameView extends JPanel implements Observer {
         }
 
         // 3) Línea hover (semi-transparente, color del jugador en turno)
-        if (hoverLinea != null) {
+        if (hoverLinea != null)
+        {
             g2.setStroke(new BasicStroke(LINE_WIDTH, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             Color turnoColor = (ev.getTurnoActual() == Jugador.A) ? COLOR_A_LINEA : COLOR_B_LINEA;
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.35f));
@@ -126,8 +130,10 @@ public class GameView extends JPanel implements Observer {
 
         // 4) Puntos de la grilla
         g2.setColor(COLOR_GRID);
-        for (int y = 0; y < points; y++) {
-            for (int x = 0; x < points; x++) {
+        for (int y = 0; y < points; y++)
+        {
+            for (int x = 0; x < points; x++)
+            {
                 int px = offsetX + x * cell;
                 int py = offsetY + y * cell;
                 g2.fillOval(px - DOT_RADIUS, py - DOT_RADIUS, DOT_RADIUS * 2, DOT_RADIUS * 2);
@@ -136,10 +142,17 @@ public class GameView extends JPanel implements Observer {
 
         // 5) Marcador y turno
         int puntosA = 0, puntosB = 0;
-        if (cuadros != null) {
-            for (Cuadro c : cuadros) {
-                if (c.getDueno() == Jugador.A) puntosA++;
-                else puntosB++;
+        if (cuadros != null)
+        {
+            for (Cuadro c : cuadros)
+            {
+                if (c.getDueno() == Jugador.A)
+                {
+                    puntosA++;
+                } else
+                {
+                    puntosB++;
+                }
             }
         }
         g2.setColor(Color.BLACK);
@@ -150,12 +163,20 @@ public class GameView extends JPanel implements Observer {
     }
 
     private int mapearTamano(TamanoTablero t) {
-        if (t == null) return 3;
-        switch (t) {
-            case PEQUENO: return 3;
-            case MEDIANO: return 5;
-            case GRANDE:  return 7;
-            default:      return 3;
+        if (t == null)
+        {
+            return 3;
+        }
+        switch (t)
+        {
+            case PEQUENO:
+                return 3;
+            case MEDIANO:
+                return 5;
+            case GRANDE:
+                return 7;
+            default:
+                return 3;
         }
     }
 
@@ -175,7 +196,8 @@ public class GameView extends JPanel implements Observer {
             @Override
             public void mousePressed(MouseEvent e) {
                 Linea l = calcularLineaDesdeMouse(e.getX(), e.getY());
-                if (l != null) {
+                if (l != null)
+                {
                     controladorView.realizarJugada(l);
                 }
             }
@@ -183,12 +205,16 @@ public class GameView extends JPanel implements Observer {
     }
 
     /**
-     * Traduce coordenadas de mouse a la línea más cercana de la celda bajo el cursor.
-     * Si el cursor está fuera del tablero o no hay celda válida, devuelve null.
+     * Traduce coordenadas de mouse a la línea más cercana de la celda bajo el
+     * cursor. Si el cursor está fuera del tablero o no hay celda válida,
+     * devuelve null.
      */
     private Linea calcularLineaDesdeMouse(int mx, int my) {
         EstadoVisual ev = modeloLeible.getEstadoVisual();
-        if (ev == null || ev.getTamano() == null) return null;
+        if (ev == null || ev.getTamano() == null)
+        {
+            return null;
+        }
 
         int n = mapearTamano(ev.getTamano());
         int usableW = getWidth() - 2 * MARGIN;
@@ -197,21 +223,29 @@ public class GameView extends JPanel implements Observer {
         int offsetX = (getWidth() - (cell * n)) / 2;
         int offsetY = (getHeight() - (cell * n)) / 2;
 
-        // Fuera del tablero
-        if (mx < offsetX || my < offsetY || mx > offsetX + cell * n || my > offsetY + cell * n) {
+        if (mx < offsetX || my < offsetY || mx > offsetX + cell * n || my > offsetY + cell * n)
+        {
             return null;
         }
 
-        // Coordenadas relativas
         double cx = (mx - offsetX) / (double) cell; // 0..n
         double cy = (my - offsetY) / (double) cell; // 0..n
 
         int i = (int) Math.floor(cx);
         int j = (int) Math.floor(cy);
 
-        if (i >= n) i = n - 1;
-        if (j >= n) j = n - 1;
-        if (i < 0 || j < 0) return null;
+        if (i >= n)
+        {
+            i = n - 1;
+        }
+        if (j >= n)
+        {
+            j = n - 1;
+        }
+        if (i < 0 || j < 0)
+        {
+            return null;
+        }
 
         double dx = cx - i;
         double dy = cy - j;
@@ -224,25 +258,31 @@ public class GameView extends JPanel implements Observer {
         double min = Math.min(Math.min(distTop, distBottom), Math.min(distLeft, distRight));
         Linea l;
 
-        if (min == distTop && j >= 0) {
+        if (min == distTop && j >= 0)
+        {
             l = new Linea(i, j, i + 1, j);
-        } else if (min == distBottom && j + 1 <= n) {
+        } else if (min == distBottom && j + 1 <= n)
+        {
             l = new Linea(i, j + 1, i + 1, j + 1);
-        } else if (min == distLeft && i >= 0) {
+        } else if (min == distLeft && i >= 0)
+        {
             l = new Linea(i, j, i, j + 1);
-        } else {
+        } else
+        {
             l = new Linea(i + 1, j, i + 1, j + 1);
         }
 
         // Si ya existe esa línea, seguimos mostrando hover (visual),
         // pero al hacer click, el motor la rechazará; opcionalmente podemos ocultar hover si ya está jugada:
         List<Linea> existentes = ev.getLineasDibujadas();
-        if (existentes != null) {
-            for (Linea ex : existentes) {
-                if (ex.equals(l)) {
-                    // ya existe; si prefieres no mostrar hover en líneas ocupadas, descomenta:
-                    // return null;
-                    break;
+        if (existentes != null)
+        {
+            for (Linea ex : existentes)
+            {
+                if (ex.equals(l))
+                {
+                    return null;
+                    // break;
                 }
             }
         }
