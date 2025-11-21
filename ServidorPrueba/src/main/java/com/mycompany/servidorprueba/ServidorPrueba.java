@@ -22,9 +22,9 @@ import java.net.Socket;
 public class ServidorPrueba {
 
     public static void main(String[] args) throws Exception {
-        System.out.println("╔════════════════════════════════════════════════╗");
-        System.out.println("║           SERVIDOR PRUEBA - ESCENARIO 1   ║");
-        System.out.println("╚════════════════════════════════════════════════╝\n");
+        System.out.println("");
+        System.out.println("SERVIDOR PRUEBA - ESCENARIO 1");
+        System.out.println("\n");
         
         // Inicializar componentes de RED
         System.out.println(" Inicializando componentes...\n");
@@ -42,27 +42,27 @@ public class ServidorPrueba {
         Thread.sleep(500);
         
         // PASO 1: Escuchar paquete de IDA
-        System.out.println("═══════════════════════════════════════════════");
+        System.out.println("");
         System.out.println(" PASO 1: Esperando PAQUETE DE IDA");
-        System.out.println("═══════════════════════════════════════════════\n");
+        System.out.println("\n");
         System.out.println(" Escuchando en puerto 8080...\n");
         
         DataDTO paqueteRecibido = recibirPaquete(serializador);
         
-        System.out.println("═══════════════════════════════════════════════");
+        System.out.println("");
         System.out.println(" PAQUETE DE IDA RECIBIDO:");
-        System.out.println("═══════════════════════════════════════════════");
+        System.out.println("");
         System.out.println(" Contenido:");
         System.out.println("   - Tipo: " + paqueteRecibido.getTipo());
         System.out.println("   - Payload: " + paqueteRecibido.getPayload());
         System.out.println("   - Origen: " + paqueteRecibido.getProyectoOrigen());
         System.out.println("   - Destino: " + paqueteRecibido.getProyectoDestino());
-        System.out.println("═══════════════════════════════════════════════\n");
+        System.out.println("\n");
         
         // PASO 2: Enviar respuesta (paquete de VUELTA)
-        System.out.println("═══════════════════════════════════════════════");
+        System.out.println("");
         System.out.println("PASO 2: Enviando PAQUETE DE VUELTA");
-        System.out.println("═══════════════════════════════════════════════\n");
+        System.out.println("\n");
         
         DataDTO paqueteVuelta = new DataDTO("RESPUESTA");
         paqueteVuelta.setPayload("Este es el paquete de VUELTA desde ServidorPrueba. Recibí: " + 
@@ -84,9 +84,9 @@ public class ServidorPrueba {
         // Esperar a que se envíe
         Thread.sleep(1000);
         
-        System.out.println("╔════════════════════════════════════════════════╗");
-        System.out.println("║             PRUEBA COMPLETADA            ║");
-        System.out.println("╚════════════════════════════════════════════════╝");
+        System.out.println("");
+        System.out.println("PRUEBA COMPLETADA");
+        System.out.println("");
         
         // Cleanup
         clienteTCP.detener();

@@ -27,9 +27,9 @@ public class ClientePrueba2 {
     private static int contadorPaquetes = 0;
 
     public static void main(String[] args) throws Exception {
-        System.out.println("╔════════════════════════════════════════════════╗");
-        System.out.println("║        CLIENTE PRUEBA - ESCENARIO 2       ║");
-        System.out.println("╚════════════════════════════════════════════════╝\n");
+        System.out.println("");
+        System.out.println("CLIENTE PRUEBA - ESCENARIO 2");
+        System.out.println("\n");
         
         // Inicializar componentes de RED
         System.out.println(" Inicializando componentes...\n");
@@ -59,9 +59,9 @@ public class ClientePrueba2 {
         Thread.sleep(500);
         
         // ENVIAR 3 PAQUETES
-        System.out.println("═══════════════════════════════════════════════");
+        System.out.println("");
         System.out.println(" ENVIANDO 3 PAQUETES DE IDA");
-        System.out.println("═══════════════════════════════════════════════\n");
+        System.out.println("\n");
         
         String[] mensajes = {
             "Primer mensaje: Iniciando comunicación",
@@ -77,16 +77,16 @@ public class ClientePrueba2 {
         System.out.println(" Todos los paquetes IDA han sido enviados\n");
         
         // Esperar a recibir todas las respuestas
-        System.out.println("═══════════════════════════════════════════════");
+        System.out.println("");
         System.out.println(" Esperando 3 paquetes de VUELTA");
-        System.out.println("═══════════════════════════════════════════════\n");
+        System.out.println("\n");
         
         // Dar tiempo para que lleguen todas las respuestas
         Thread.sleep(5000);
         
-        System.out.println("╔════════════════════════════════════════════════╗");
-        System.out.println("║              PRUEBA COMPLETADA           ║");
-        System.out.println("╚════════════════════════════════════════════════╝");
+        System.out.println("");
+        System.out.println("PRUEBA COMPLETADA");
+        System.out.println("");
         
         // Cleanup
         clienteTCP.detener();
@@ -125,11 +125,11 @@ public class ClientePrueba2 {
                     contadorPaquetes++;
                     
                     if (respuesta != null && !respuesta.isEmpty()) {
-                        System.out.println("═══════════════════════════════════════════════");
+                        System.out.println("");
                         System.out.println("️  PAQUETE DE VUELTA #" + contadorPaquetes + " RECIBIDO:");
-                        System.out.println("═══════════════════════════════════════════════");
+                        System.out.println("");
                         System.out.println(respuesta);
-                        System.out.println("═══════════════════════════════════════════════\n");
+                        System.out.println("\n");
                     } else {
                         System.out.println("️  Respuesta #" + contadorPaquetes + " vacía recibida\n");
                     }

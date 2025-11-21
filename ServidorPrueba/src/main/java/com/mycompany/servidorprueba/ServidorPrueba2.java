@@ -27,9 +27,9 @@ public class ServidorPrueba2 {
     private static int contadorEnviados = 0;
 
     public static void main(String[] args) throws Exception {
-        System.out.println("╔════════════════════════════════════════════════╗");
-        System.out.println("║       SERVIDOR PRUEBA - ESCENARIO 2      ║");
-        System.out.println("╚════════════════════════════════════════════════╝\n");
+        System.out.println("");
+        System.out.println("SERVIDOR PRUEBA - ESCENARIO 2");
+        System.out.println("\n");
         
         // Inicializar componentes de RED
         System.out.println(" Inicializando componentes...\n");
@@ -47,16 +47,16 @@ public class ServidorPrueba2 {
         Thread.sleep(500);
         
         // PASO 1: Escuchar 3 paquetes de IDA
-        System.out.println("═══════════════════════════════════════════════");
+        System.out.println("");
         System.out.println(" ESPERANDO 3 PAQUETES DE IDA");
-        System.out.println("═══════════════════════════════════════════════\n");
+        System.out.println("\n");
         System.out.println(" Escuchando en puerto " + PUERTO_SERVIDOR + "...\n");
         
         recibirYResponder(serializador, emisor);
         
-        System.out.println("╔════════════════════════════════════════════════╗");
-        System.out.println("║             PRUEBA COMPLETADA           ║");
-        System.out.println("╚════════════════════════════════════════════════╝");
+        System.out.println("");
+        System.out.println("PRUEBA COMPLETADA");
+        System.out.println("");
         System.out.println(" Estadísticas:");
         System.out.println("   - Paquetes recibidos: " + contadorRecibidos);
         System.out.println("   - Paquetes enviados: " + contadorEnviados + "\n");
@@ -84,13 +84,13 @@ public class ServidorPrueba2 {
                         // Deserializar
                         DataDTO paqueteRecibido = serializador.deserializar(jsonRecibido, DataDTO.class);
                         
-                        System.out.println("═══════════════════════════════════════════════");
+                        System.out.println("");
                         System.out.println(" PAQUETE #" + contadorRecibidos + " RECIBIDO:");
-                        System.out.println("═══════════════════════════════════════════════");
+                        System.out.println("");
                         System.out.println("   Tipo: " + paqueteRecibido.getTipo());
                         System.out.println("   Payload: " + paqueteRecibido.getPayload());
                         System.out.println("   Origen: " + paqueteRecibido.getProyectoOrigen());
-                        System.out.println("═══════════════════════════════════════════════\n");
+                        System.out.println("\n");
                         
                         // Crear y enviar respuesta
                         DataDTO respuesta = new DataDTO("RESPUESTA_" + contadorRecibidos);

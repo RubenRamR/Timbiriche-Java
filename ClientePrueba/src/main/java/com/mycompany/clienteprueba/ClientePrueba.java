@@ -23,12 +23,12 @@ import java.net.Socket;
 public class ClientePrueba {
 
     public static void main(String[] args) throws Exception {
-        System.out.println("╔════════════════════════════════════════════════╗");
-        System.out.println("║          🚀 CLIENTE PRUEBA - ESCENARIO 1 🚀    ║");
-        System.out.println("╚════════════════════════════════════════════════╝\n");
+        System.out.println("");
+        System.out.println("CLIENTE PRUEBA - ESCENARIO 1");
+        System.out.println("\n");
         
         // Inicializar componentes de RED
-        System.out.println("⏳ Inicializando componentes...\n");
+        System.out.println("Inicializando componentes...\n");
         ISerializador serializador = new JsonSerializador();
         EnvioQueue envioQueue = new EnvioQueue();
         EmisorCliente emisor = new EmisorCliente(serializador, envioQueue);
@@ -43,9 +43,9 @@ public class ClientePrueba {
         Thread.sleep(500);
         
         // PASO 1: Enviar paquete de IDA
-        System.out.println("═══════════════════════════════════════════════");
+        System.out.println("");
         System.out.println(" PASO 1: Enviando PAQUETE DE IDA");
-        System.out.println("═══════════════════════════════════════════════\n");
+        System.out.println("\n");
         
         DataDTO paqueteIda = new DataDTO("PRUEBA");
         paqueteIda.setPayload("Este es el paquete de IDA desde ClientePrueba");
@@ -64,15 +64,15 @@ public class ClientePrueba {
         System.out.println(" Paquete IDA enviado a puerto 8080\n");
         
         // PASO 2: Esperar respuesta (paquete de VUELTA)
-        System.out.println("═══════════════════════════════════════════════");
+        System.out.println("");
         System.out.println("PASO 2: Esperando PAQUETE DE VUELTA");
-        System.out.println("═══════════════════════════════════════════════\n");
+        System.out.println("\n");
         
         recibirRespuesta();
         
-        System.out.println("\n╔════════════════════════════════════════════════╗");
-        System.out.println("║            PRUEBA COMPLETADA           ║");
-        System.out.println("╚════════════════════════════════════════════════╝");
+        System.out.println("\n");
+        System.out.println("PRUEBA COMPLETADA");
+        System.out.println("");
         
         // Cleanup
         clienteTCP.detener();
@@ -93,11 +93,11 @@ public class ClientePrueba {
                 String respuesta = in.readLine();
                 
                 if (respuesta != null && !respuesta.isEmpty()) {
-                    System.out.println("═══════════════════════════════════════════════");
+                    System.out.println("");
                     System.out.println("  PAQUETE DE VUELTA RECIBIDO:");
-                    System.out.println("═══════════════════════════════════════════════");
+                    System.out.println("");
                     System.out.println(respuesta);
-                    System.out.println("═══════════════════════════════════════════════\n");
+                    System.out.println("\n");
                 } else {
                     System.out.println(" ️  Respuesta vacía recibida\n");
                 }
