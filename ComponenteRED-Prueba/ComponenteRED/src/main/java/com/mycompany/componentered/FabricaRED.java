@@ -17,29 +17,30 @@ public class FabricaRED {
     private static ReceptorCliente hiloReceptor;
     private static ClienteTCP hiloSalida;
 
-    /**
-     * Configura y arranca la red.
-     *
-     * @param puertoLocal Puerto donde escuchar
-     * @param receptor Instancia de tu lógica que recibirá los mensajes.
-     * @return Instancia de IDispatcher para enviar mensajes.
-     */
-    public static IDispatcher configurarRed(int puertoLocal, String ipServidor, int puertoServidor, IReceptorExterno receptor) {
+    public static IDispatcher configurarRed(int puertoLocal, String ipServidor, int puertoServidor) {
 
         ISerializador serializador = new JsonSerializador();
         EnvioQueue cola = new EnvioQueue();
-
         EmisorCliente emisor = new EmisorCliente(serializador, cola, ipServidor, puertoServidor);
 
         detenerTodo();
 
-        hiloReceptor = new ReceptorCliente(puertoLocal, receptor, serializador);
+        // Creamos el receptor SIN lógica todavía (desconectado)
+        hiloReceptor = new ReceptorCliente(puertoLocal, serializador);
         hiloSalida = new ClienteTCP(cola);
 
         new Thread(hiloReceptor, "RED-Receptor").start();
         new Thread(hiloSalida, "RED-Emisor").start();
 
         return emisor;
+    }
+
+    // Metodo estatico para Ensamblador lo conecte después
+    public static void establecerReceptor(IReceptorExterno receptor) {
+        if (hiloReceptor != null)
+        {
+            hiloReceptor.setReceptor(receptor);
+        }
     }
 
     public static void detenerTodo() {

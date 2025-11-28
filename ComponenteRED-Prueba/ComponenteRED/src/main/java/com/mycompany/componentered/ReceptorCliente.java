@@ -19,15 +19,18 @@ import java.nio.charset.StandardCharsets;
 public class ReceptorCliente implements Runnable {
 
     private final int puerto;
-    private final IReceptorExterno receptorExterno;
+    private IReceptorExterno receptorExterno;
     private final ISerializador serializador;
     private ServerSocket serverSocket;
     private volatile boolean ejecutando = true;
 
-    public ReceptorCliente(int puerto, IReceptorExterno receptorExterno, ISerializador serializador) {
+    public ReceptorCliente(int puerto, ISerializador serializador) {
         this.puerto = puerto;
-        this.receptorExterno = receptorExterno;
         this.serializador = serializador;
+    }
+
+    public void setReceptor(IReceptorExterno receptor) {
+        this.receptorExterno = receptor;
     }
 
     @Override

@@ -16,8 +16,16 @@ public class ClienteMain {
     public static void main(String[] args) throws InterruptedException {
         System.out.println("=== CLIENTE DE PRUEBAS ===");
 
+        // 1. Instanciar la lógica (Quien recibe)
         ClienteLogica logica = new ClienteLogica();
-        IDispatcher emisor = FabricaRED.configurarRed(9000, "127.0.0.1", 8080, logica);
+
+        // A. Configurar Red (Solo infraestructura, sin receptor aún)
+        IDispatcher emisor = FabricaRED.configurarRed(9000, "127.0.0.1", 8080);
+
+        // B. Establecer Receptor (Chamba del Ensamblador: Conectar cables)
+        FabricaRED.establecerReceptor(logica);
+
+        // -----------------------------------------------------------
         Thread.sleep(1000);
 
         // -------------------------------------------------
@@ -32,6 +40,8 @@ public class ClienteMain {
         paquete1.setProyectoOrigen("Cliente");
 
         System.out.println("[CLIENTE] Enviando 1 Jugada...");
+
+        // Usamos el método sobrecargado (sin IP, ya la tiene configurada)
         emisor.enviar(paquete1);
 
         Thread.sleep(3000);
