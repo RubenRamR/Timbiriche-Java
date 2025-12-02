@@ -7,7 +7,6 @@ package com.mycompany.servidor;
 import com.mycompany.dtos.DataDTO;
 import com.mycompany.interfacesdispatcher.IDispatcher;
 import com.mycompany.interfacesreceptor.IReceptorExterno;
-import com.mycompany.protocolo.Protocolo;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,10 +38,10 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
     @Override
     public void recibirMensaje(DataDTO datos) {
         System.out.println("[Control] Recibido DTO: " + datos.getTipo());
-        if (datos.getTipo().equals(Protocolo.SOLICITUD_LOGIN.name()))
+        if (!sesiones.containsKey(datos.getProyectoOrigen()))
         {
-            sesiones.put(datos.getProyectoOrigen(), datos.getPayload());
-            System.out.println("[Control] Sesión registrada: " + datos.getProyectoOrigen());
+            sesiones.put(datos.getProyectoOrigen(), datos.getProyectoOrigen());
+            System.out.println("[Control] Nueva sesión detectada y registrada: " + datos.getProyectoOrigen());
         }
 
         Evento evento = convertirDTOaEvento(datos);
@@ -53,10 +52,10 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
     @Override
     public void procesarEvento(Evento evento) {
 
-        if (evento.es(Protocolo.SOLICITUD_ENVIO))
+        if (evento.getTipo().equals(EventosSistema.SOLICITUD_ENVIO))
         {
 
-            System.out.println("[Control] Solicitud de envío detectada.");
+            System.out.println("[Control] Solicitud de envío detectada: Envío");
             System.out.println("[Control] Ejecutando envío a la red.");
 
             if (evento.getDato() instanceof DataDTO)

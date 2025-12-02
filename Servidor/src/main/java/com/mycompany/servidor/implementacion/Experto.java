@@ -11,6 +11,7 @@ import com.mycompany.servidor.Blackboard;
 import com.mycompany.servidor.Evento;
 import com.mycompany.servidor.IFuenteConocimiento;
 import java.util.List;
+import com.mycompany.servidor.EventosSistema;
 
 /**
  *
@@ -33,23 +34,36 @@ public class Experto implements IFuenteConocimiento {
         this.blackboard = bb;
     }
 
-   @Override
+    @Override
     public void procesarEvento(Evento evento) {
         System.out.println("[Experto] Procesando jugada de: " + this.identificador);
-        if (evento.getOrigen().equals(this.identificador)) {
-            
-            if (evento.getTipo().equals(Protocolo.INTENTO_JUGADA.name())) {
-                
+        if (evento.getOrigen().equals(this.identificador))
+        {
+
+            if (evento.getTipo().equals(Protocolo.INTENTO_JUGADA.name()))
+            {
+
                 ejecutarLogica((String) evento.getDato());
             }
         }
     }
 
     private void ejecutarLogica(String payloadJson) {
+        // 1. VALIDAR TURNO 
+        Evento ultimoTurno = blackboard.obtenerUltimoEvento("TURNO_ACTUAL");
+        // Nota: Si es el primer turno y devuelve null, quizás debas dejar pasar o validar inicio.
+        if (ultimoTurno != null && !ultimoTurno.getDato().equals(this.identificador))
+        {
+            return;
+        }
+
+        // 2. VALIDAR ESTADO
         if (!validarEstado(payloadJson))
         {
             return;
         }
+
+        // 3. GUARDAR 
         Evento hecho = new Evento(
                 Protocolo.ACTUALIZAR_TABLERO.name(),
                 payloadJson,
@@ -57,10 +71,11 @@ public class Experto implements IFuenteConocimiento {
         );
         blackboard.agregarEvento(hecho);
 
-        DataDTO respuesta = new DataDTO(Protocolo.ACTUALIZAR_TABLERO);
-        respuesta.setPayload(payloadJson);
-        respuesta.setProyectoOrigen("SERVIDOR");
+        // 4. EVALUAR REGLAS
+        int puntos = evaluarReglas(payloadJson);
 
+        // 5. RESPONDER (Paso 29)
+        DataDTO respuesta = new DataDTO(Protocolo.ACTUALIZAR_TABLERO);
         generarEventoSalida(respuesta);
     }
 
@@ -80,10 +95,15 @@ public class Experto implements IFuenteConocimiento {
     private void generarEventoSalida(DataDTO dtoRespuesta) {
         System.out.println("[Experto] Publicando solicitud de envío: " + dtoRespuesta.getTipo());
         Evento solicitud = new Evento(
-                Protocolo.SOLICITUD_ENVIO.name(),
+                EventosSistema.SOLICITUD_ENVIO,
                 dtoRespuesta,
                 this.identificador
         );
         blackboard.publicarEvento(solicitud);
+    }
+
+    private int evaluarReglas(String datos) {
+        // Lógica simulada: retorna 0 por ahora
+        return 0;
     }
 }
