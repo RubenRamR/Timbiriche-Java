@@ -1,8 +1,0 @@
-com\mycompany\red\JsonSerializador.class
-com\mycompany\red\ReceptorCliente.class
-com\mycompany\red\ISerializador.class
-com\mycompany\red\EmisorCliente.class
-com\mycompany\red\EnvioQueue.class
-com\mycompany\red\ClienteTCP.class
-com\mycompany\red\DataDTO.class
-com\mycompany\red\EnvioPacket.class
