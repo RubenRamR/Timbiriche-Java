@@ -29,7 +29,7 @@ public class ControllerView {
      */
     public void onClicRealizarJugada(String tipoLinea, int fila, int col) {
         
-        // 1. Armar DTO usando tu Protocolo
+        // 1. Armar DTO usando Protocolo
         DataDTO dto = new DataDTO(Protocolo.INTENTO_JUGADA);
         
         // Por ahora usamos un payload súper simple: "H;fila;col"
