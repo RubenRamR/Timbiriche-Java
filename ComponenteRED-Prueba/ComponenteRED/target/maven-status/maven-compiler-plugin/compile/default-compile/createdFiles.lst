@@ -1,8 +1,0 @@
-com\mycompany\componentered\EnvioPacket.class
-com\mycompany\componentered\ClienteTCP.class
-com\mycompany\componentered\EnvioQueue.class
-com\mycompany\componentered\FabricaRED.class
-com\mycompany\componentered\ISerializador.class
-com\mycompany\componentered\ReceptorCliente.class
-com\mycompany\componentered\EmisorCliente.class
-com\mycompany\componentered\JsonSerializador.class
