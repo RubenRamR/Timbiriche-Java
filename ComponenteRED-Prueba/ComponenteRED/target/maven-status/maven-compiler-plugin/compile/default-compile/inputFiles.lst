@@ -1,8 +1,8 @@
-C:\Users\rramirez\OneDrive\Escritorio\Timbiriche-Java\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\ClienteTCP.java
-C:\Users\rramirez\OneDrive\Escritorio\Timbiriche-Java\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\JsonSerializador.java
-C:\Users\rramirez\OneDrive\Escritorio\Timbiriche-Java\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\EnvioPacket.java
-C:\Users\rramirez\OneDrive\Escritorio\Timbiriche-Java\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\EnvioQueue.java
-C:\Users\rramirez\OneDrive\Escritorio\Timbiriche-Java\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\FabricaRED.java
-C:\Users\rramirez\OneDrive\Escritorio\Timbiriche-Java\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\EmisorCliente.java
-C:\Users\rramirez\OneDrive\Escritorio\Timbiriche-Java\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\ISerializador.java
-C:\Users\rramirez\OneDrive\Escritorio\Timbiriche-Java\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\ReceptorCliente.java
+C:\Users\monic\OneDrive\Documentos\GitHub\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\ClienteTCP.java
+C:\Users\monic\OneDrive\Documentos\GitHub\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\EmisorCliente.java
+C:\Users\monic\OneDrive\Documentos\GitHub\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\EnvioPacket.java
+C:\Users\monic\OneDrive\Documentos\GitHub\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\EnvioQueue.java
+C:\Users\monic\OneDrive\Documentos\GitHub\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\FabricaRED.java
+C:\Users\monic\OneDrive\Documentos\GitHub\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\ISerializador.java
+C:\Users\monic\OneDrive\Documentos\GitHub\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\JsonSerializador.java
+C:\Users\monic\OneDrive\Documentos\GitHub\Timbiriche-Java\ComponenteRED-Prueba\ComponenteRED\src\main\java\com\mycompany\componentered\ReceptorCliente.java
