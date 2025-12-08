@@ -35,8 +35,10 @@ import timbiriche.presentacion.ModelView;
 public class TimbiricheApp {
 
     public static void main(String[] args) {
-       SwingUtilities.invokeLater(() -> {
-            try {
+        SwingUtilities.invokeLater(() ->
+        {
+            try
+            {
                 System.out.println("=== INICIANDO CLIENTE TIMBIRICHE ===");
 
                 // -----------------------------------------------------------
@@ -44,7 +46,7 @@ public class TimbiricheApp {
                 // -----------------------------------------------------------
                 // Definimos al jugador de esta máquina
                 Jugador local = new Jugador("Jugador_Local", "#0000FF"); // Azul
-                
+
                 // Simulamos un rival para que la lógica de turnos funcione
                 Jugador remoto = new Jugador("Rival_Remoto", "#FF0000"); // Rojo
 
@@ -57,9 +59,12 @@ public class TimbiricheApp {
                 // -----------------------------------------------------------
                 MotorJuego motor = new MotorJuego();
 
-                // CONFIGURACIÓN ESTADO INICIAL (Saltando Login)
+                // 2. CONFIGURACIÓN
+                // Tamaño para tu prueba
+                int TAMANO_PRUEBA = 30;
+                motor.configurarTablero(TAMANO_PRUEBA);
                 motor.setJugadorLocal(local);
-                
+
                 List<Jugador> listaInicial = new ArrayList<>();
                 listaInicial.add(local);
 //                Comentarear linea de abajo para probar en remoto
@@ -74,10 +79,10 @@ public class TimbiricheApp {
 
                 // B. Salida (Dispatcher): Motor envía mensajes a la red
                 FabricaRED fabricaRed = new FabricaRED();
-                
+
                 // Configurar sockets y obtener el objeto para enviar
                 IDispatcher dispatcher = fabricaRed.configurarRed(puertoCliente, ipServidor, puertoServidor);
-                
+
                 // Conectar la entrada de red al receptor que creamos
                 fabricaRed.establecerReceptor(receptor);
 
@@ -87,7 +92,6 @@ public class TimbiricheApp {
                 // -----------------------------------------------------------
                 // 4. CAPA DE PRESENTACIÓN (MVC)
                 // -----------------------------------------------------------
-                
                 // A. ViewModel (ModelView): Escucha cambios en el Motor
                 ModelView modelView = new ModelView(motor);
 
@@ -105,7 +109,8 @@ public class TimbiricheApp {
                 System.out.println("-> Cliente iniciado correctamente.");
                 System.out.println("-> Turno actual: " + motor.getTurnoActual().getNombre());
 
-            } catch (Exception e) {
+            } catch (Exception e)
+            {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(null, "Error fatal al iniciar: " + e.getMessage());
                 System.exit(1);

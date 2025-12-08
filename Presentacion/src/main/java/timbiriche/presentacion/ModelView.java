@@ -10,7 +10,7 @@ import com.mycompany.dominio.Linea;
 import com.mycompany.dominio.Tablero;
 import com.mycompany.dtos.DataDTO;
 import com.mycompany.imotorjuego.IMotorJuego;
-import com.mycompany.modelojuego.IMotorJuegoListener;
+import com.mycompany.imotorjuego.IMotorJuegoListener;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -196,5 +196,13 @@ public class ModelView implements IModelViewLeible, IMotorJuegoListener {
     @Override
     public void removerObservador(Observer o) {
         observadores.remove(o);
+    }
+
+    @Override
+    public int getDimension() {
+        if (motor == null || motor.getTablero() == null) {
+            return 10;
+        }
+        return motor.getTablero().dimension;
     }
 }

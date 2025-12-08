@@ -7,7 +7,6 @@ package com.mycompany.imotorjuego;
 import com.mycompany.dominio.Jugador;
 import com.mycompany.dominio.Linea;
 import com.mycompany.dominio.Tablero;
-import com.mycompany.modelojuego.IMotorJuegoListener;
 import java.util.List;
 
 /**

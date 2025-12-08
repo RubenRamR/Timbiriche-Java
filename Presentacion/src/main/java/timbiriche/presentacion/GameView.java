@@ -11,6 +11,7 @@ import com.mycompany.dominio.Punto;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -18,278 +19,318 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
 
 /**
  *
  * @author rramirez
  */
 public class GameView extends javax.swing.JFrame implements Observer {
-
-    // Dependencias MVC
-    private final ControllerView controlador;
+private final ControllerView controlador;
     private final IModelViewLeible modeloLeible;
 
-    // Componentes visuales
-    private final JPanel pnlLienzo; // Panel interno donde pintaremos
+    // Componentes de la UI
+    private final JPanel pnlLienzo;   // Centro: Tablero
+    private final JPanel pnlMarcador; // Derecha: Nombres y Puntos
     
-    // Constantes de Diseño (GUI Logic)
-    private static final int DIMENSION_LOGICA = 10; // 10x10 puntos
-    private static final int MARGEN = 30;
-    private static final int RADIO_PUNTO = 10;
-    private static final int GROSOR_LINEA = 4;
-    private static final int TOLERANCIA_CLIC = 15; // Píxeles de error permitidos al hacer clic
+    // Componente específico para el turno (Nuevo)
+    private JLabel lblEstadoTurno;
 
-    /**
-     * Constructor.
-     * @param controlador Para enviar acciones (inputs).
-     * @param modeloLeible Para leer el estado a dibujar (outputs).
-     */
+    // Configuración Visual Tablero
+    private static final int RADIO_PUNTO = 12;
+    private static final int GROSOR_LINEA = 6;
+    private static final int TOLERANCIA_CLIC = 20;
+
     public GameView(ControllerView controlador, IModelViewLeible modeloLeible) {
         this.controlador = controlador;
         this.modeloLeible = modeloLeible;
 
-        // 1. Inicializar contenedor base (Generado por NetBeans)
-        initComponents();
+        initComponents(); 
         
-        // 2. Suscribirse al Modelo (Observer Pattern)
+        // 1. Configuración de Ventana
+        actualizarTitulo(); 
+        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH); 
+        setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+
+        // 2. Observer
         this.modeloLeible.agregarObservador(this);
 
-        // 3. Configurar Título y Ventana
-        actualizarTitulo();
-        this.setResizable(false);
-        this.setLocationRelativeTo(null);
+        // 3. Layout Principal
+        PnlFondo.setLayout(new BorderLayout());
 
-        // 4. Inicializar el Lienzo de Dibujo Personalizado
-        // Usamos una clase anónima o interna para sobreescribir paintComponent
+        // --- A. PANEL DERECHO (MARCADOR Y TURNO) ---
+        pnlMarcador = new JPanel();
+        pnlMarcador.setPreferredSize(new Dimension(320, 0)); // Un poco más ancho
+        pnlMarcador.setBackground(new Color(245, 245, 245)); 
+        pnlMarcador.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, Color.GRAY));
+        pnlMarcador.setLayout(new BoxLayout(pnlMarcador, BoxLayout.Y_AXIS));
+        
+        PnlFondo.add(pnlMarcador, BorderLayout.EAST);
+
+        // --- B. PANEL CENTRAL (TABLERO) ---
         pnlLienzo = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                dibujarEstadoJuego((Graphics2D) g);
+                dibujarJuegoCentrado((Graphics2D) g);
             }
         };
         pnlLienzo.setBackground(Color.WHITE);
         
-        // Configurar listener de mouse para detectar jugadas
         pnlLienzo.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                manejarClicTablero(e.getX(), e.getY());
+                manejarClic(e.getX(), e.getY());
             }
         });
 
-        // 5. Agregar el lienzo al Panel de Fondo (PnlFondo)
-        // Aseguramos que PnlFondo tenga un Layout que expanda el lienzo
-        PnlFondo.setLayout(new BorderLayout());
         PnlFondo.add(pnlLienzo, BorderLayout.CENTER);
         
-        // Refrescar estructura visual
-        this.pack(); 
-        // Forzamos un tamaño preferido si pack() queda muy chico
-        if (this.getWidth() < 650) this.setSize(650, 680);
+        // Carga inicial visual
+        actualizarMarcador();
     }
 
-    // =========================================================
-    // LÓGICA DE DIBUJO (GUI PURA)
-    // =========================================================
+    // =========================================================================
+    // LÓGICA DE MARCADOR (ACTUALIZADA)
+    // =========================================================================
+    
+    private void actualizarMarcador() {
+        pnlMarcador.removeAll(); // Limpiar todo para repintar estado actual
+        
+        // 1. SECCIÓN DE TURNO ACTUAL (Parte Superior, Grande)
+        JLabel lblTituloTurno = new JLabel("TURNO ACTUAL:");
+        lblTituloTurno.setFont(new Font("Arial", Font.PLAIN, 16));
+        lblTituloTurno.setAlignmentX(CENTER_ALIGNMENT);
+        lblTituloTurno.setBorder(new EmptyBorder(30, 0, 10, 0)); // Margen superior
+        
+        lblEstadoTurno = new JLabel("Esperando...");
+        lblEstadoTurno.setFont(new Font("Segoe UI", Font.BOLD, 28)); // Letra Grande
+        lblEstadoTurno.setAlignmentX(CENTER_ALIGNMENT);
+        
+        // Lógica para obtener nombre y color del turno actual
+        Jugador jugadorTurno = modeloLeible.getTurnoActual();
+        if (jugadorTurno != null) {
+            lblEstadoTurno.setText(jugadorTurno.getNombre());
+            lblEstadoTurno.setForeground(decodificarColor(jugadorTurno.getColor()));
+        } else {
+            lblEstadoTurno.setText("---");
+            lblEstadoTurno.setForeground(Color.GRAY);
+        }
 
-    /**
-     * Método principal de dibujo. Se llama cada vez que el modelo notifica cambios.
-     */
-    private void dibujarEstadoJuego(Graphics2D g2) {
-        // Configuración de calidad
+        // Agregar sección de turno al panel
+        pnlMarcador.add(lblTituloTurno);
+        pnlMarcador.add(lblEstadoTurno);
+        
+        // Separador visual
+        pnlMarcador.add(javax.swing.Box.createRigidArea(new Dimension(0, 40)));
+        JLabel lblSeparador = new JLabel("_________________________");
+        lblSeparador.setForeground(Color.LIGHT_GRAY);
+        lblSeparador.setAlignmentX(CENTER_ALIGNMENT);
+        pnlMarcador.add(lblSeparador);
+        pnlMarcador.add(javax.swing.Box.createRigidArea(new Dimension(0, 20)));
+
+        // 2. LISTA DE JUGADORES (Puntajes)
+        JLabel lblTituloPuntajes = new JLabel("PUNTAJES");
+        lblTituloPuntajes.setFont(new Font("Arial", Font.BOLD, 18));
+        lblTituloPuntajes.setAlignmentX(CENTER_ALIGNMENT);
+        pnlMarcador.add(lblTituloPuntajes);
+        pnlMarcador.add(javax.swing.Box.createRigidArea(new Dimension(0, 15)));
+
+        List<Jugador> jugadores = modeloLeible.getJugadores();
+        if (jugadores != null) {
+            for (Jugador j : jugadores) {
+                pnlMarcador.add(crearPanelJugador(j));
+                pnlMarcador.add(javax.swing.Box.createRigidArea(new Dimension(0, 10))); 
+            }
+        }
+        
+        pnlMarcador.revalidate();
+        pnlMarcador.repaint();
+    }
+
+    private JPanel crearPanelJugador(Jugador j) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout(15, 0)); 
+        panel.setBackground(Color.WHITE);
+        // Borde redondeado o simple
+        panel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        panel.setMaximumSize(new Dimension(280, 80)); 
+        
+        // Avatar Placeholder
+        JPanel pnlAvatar = new JPanel();
+        pnlAvatar.setPreferredSize(new Dimension(50, 50));
+        pnlAvatar.setBackground(Color.decode("#EEEEEE"));
+        pnlAvatar.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        pnlAvatar.add(new JLabel("IMG")); 
+        panel.add(pnlAvatar, BorderLayout.WEST);
+        
+        // Info
+        JPanel pnlInfo = new JPanel();
+        pnlInfo.setLayout(new BoxLayout(pnlInfo, BoxLayout.Y_AXIS));
+        pnlInfo.setBackground(Color.WHITE);
+        
+        JLabel lblNombre = new JLabel(j.getNombre());
+        lblNombre.setFont(new Font("Arial", Font.BOLD, 16));
+        lblNombre.setForeground(decodificarColor(j.getColor())); // Color del jugador
+
+        JLabel lblPuntos = new JLabel(j.getPuntaje() + " pts");
+        lblPuntos.setFont(new Font("Arial", Font.BOLD, 14));
+        lblPuntos.setForeground(Color.DARK_GRAY);
+        
+        pnlInfo.add(lblNombre);
+        pnlInfo.add(lblPuntos);
+        
+        panel.add(pnlInfo, BorderLayout.CENTER);
+        return panel;
+    }
+
+    // =========================================================================
+    // LÓGICA DE DIBUJO Y CLICS (Sin cambios en lógica, solo visualización)
+    // =========================================================================
+    
+    private void dibujarJuegoCentrado(Graphics2D g2) {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        MetricasTablero m = calcularMetricas();
 
-        // Cálculos de geometría visual
-        int anchoPanel = pnlLienzo.getWidth();
-        int altoPanel = pnlLienzo.getHeight();
-        int ladoMenor = Math.min(anchoPanel, altoPanel);
-        int areaUtil = ladoMenor - (2 * MARGEN);
-        int espacio = areaUtil / (DIMENSION_LOGICA - 1); // Distancia entre puntos
-
-        // A. DIBUJAR PUNTOS (GRID)
+        // Puntos
         g2.setColor(Color.BLACK);
-        for (int row = 0; row < DIMENSION_LOGICA; row++) {
-            for (int col = 0; col < DIMENSION_LOGICA; col++) {
-                int x = MARGEN + (col * espacio);
-                int y = MARGEN + (row * espacio);
-                g2.fillOval(x - RADIO_PUNTO / 2, y - RADIO_PUNTO / 2, RADIO_PUNTO, RADIO_PUNTO);
+        for (int row = 0; row < m.dim; row++) {
+            for (int col = 0; col < m.dim; col++) {
+                int px = m.originX + (col * m.espacio);
+                int py = m.originY + (row * m.espacio);
+                g2.fillOval(px - RADIO_PUNTO/2, py - RADIO_PUNTO/2, RADIO_PUNTO, RADIO_PUNTO);
             }
         }
 
-        // B. DIBUJAR LÍNEAS YA CONFIRMADAS (Leemos del Modelo)
+        // Líneas
         List<Linea> lineas = modeloLeible.getLineasDibujadas();
         if (lineas != null) {
             g2.setStroke(new BasicStroke(GROSOR_LINEA));
             g2.setColor(Color.BLUE); 
-
             for (Linea l : lineas) {
-                // Convertir coordenadas lógicas (0,0) a píxeles (50,50)
-                int x1 = MARGEN + (l.p1.getX() * espacio);
-                int y1 = MARGEN + (l.p1.getY() * espacio);
-                int x2 = MARGEN + (l.p2.getX() * espacio);
-                int y2 = MARGEN + (l.p2.getY() * espacio);
-
+                int x1 = m.originX + (l.p1.getX() * m.espacio);
+                int y1 = m.originY + (l.p1.getY() * m.espacio);
+                int x2 = m.originX + (l.p2.getX() * m.espacio);
+                int y2 = m.originY + (l.p2.getY() * m.espacio);
                 g2.drawLine(x1, y1, x2, y2);
             }
         }
 
-        // C. DIBUJAR CUADROS COMPLETADOS (Leemos del Modelo)
-        List<Cuadro> cuadros = modeloLeible.getCuadrosRellenos();
-        if (cuadros != null) {
-            for (Cuadro c : cuadros) {
-                if (c.getPropietario() != null) {
-                    // Determinar coordenadas visuales del cuadro
-                    // Asumimos que el cuadro conoce sus líneas o su posición lógica
-                    // Lógica visual: encontrar la esquina superior izquierda de las líneas del cuadro
-                    Punto topLeft = calcularEsquinaSuperiorIzquierda(c.getLineas()); // Helper visual
+        // Cuadros
+        for (Cuadro c : modeloLeible.getCuadrosRellenos()) {
+            if (c.getPropietario() != null) {
+                Punto topLeft = getTopLeft(c.getLineas());
+                if (topLeft != null) {
+                    int px = m.originX + (topLeft.getX() * m.espacio);
+                    int py = m.originY + (topLeft.getY() * m.espacio);
                     
-                    if (topLeft != null) {
-                        int px = MARGEN + (topLeft.getX() * espacio);
-                        int py = MARGEN + (topLeft.getY() * espacio);
-                        
-                        // 1. Rellenar con color del jugador
-                        // Usamos un color fijo o decodificamos el hex del jugador
-                        Color colorJugador = decodificarColor(c.getPropietario().getColor());
-                        g2.setColor(colorJugador);
-                        // Ajuste visual (+2, -4) para no tapar las líneas negras/azules
-                        g2.fillRect(px + GROSOR_LINEA, py + GROSOR_LINEA, espacio - (GROSOR_LINEA*2), espacio - (GROSOR_LINEA*2));
-                        
-                        // 2. Dibujar Inicial
-                        g2.setColor(Color.WHITE);
-                        g2.setFont(new Font("SansSerif", Font.BOLD, 24));
-                        String inicial = c.getPropietario().getNombre().substring(0, 1).toUpperCase();
-                        
-                        // Centrar texto
-                        int textX = px + (espacio / 2) - 8;
-                        int textY = py + (espacio / 2) + 8;
-                        g2.drawString(inicial, textX, textY);
+                    Color colorJug = decodificarColor(c.getPropietario().getColor());
+                    g2.setColor(colorJug);
+                    int offsetRelleno = GROSOR_LINEA;
+                    int tamRelleno = m.espacio - (GROSOR_LINEA * 2);
+                    g2.fillRect(px + offsetRelleno, py + offsetRelleno, tamRelleno, tamRelleno);
+                    
+                    g2.setColor(Color.WHITE);
+                    g2.setFont(new Font("Arial", Font.BOLD, m.espacio / 2));
+                    String letra = c.getPropietario().getNombre().substring(0, 1).toUpperCase();
+                    int textW = g2.getFontMetrics().stringWidth(letra);
+                    int textH = g2.getFontMetrics().getAscent();
+                    g2.drawString(letra, px + (m.espacio/2) - (textW/2), py + (m.espacio/2) + (textH/4));
+                }
+            }
+        }
+    }
+
+    private void manejarClic(int mouseX, int mouseY) {
+        MetricasTablero m = calcularMetricas();
+        int tolerancia = Math.min(TOLERANCIA_CLIC, m.espacio / 3);
+        Linea mejorLinea = null;
+        double menorDistancia = Double.MAX_VALUE;
+
+        // Horizontales
+        for (int row = 0; row < m.dim; row++) {
+            for (int col = 0; col < m.dim - 1; col++) {
+                int x1 = m.originX + (col * m.espacio);
+                int y1 = m.originY + (row * m.espacio);
+                int x2 = x1 + m.espacio;
+                if (mouseX >= x1 && mouseX <= x2) {
+                    double dist = Math.abs(mouseY - y1);
+                    if (dist <= tolerancia && dist < menorDistancia) {
+                        menorDistancia = dist;
+                        mejorLinea = new Linea(new Punto(col, row), new Punto(col + 1, row));
                     }
                 }
             }
         }
-    }
-
-    // =========================================================
-    // MANEJO DE ENTRADA (MOUSE -> CONTROLADOR)
-    // =========================================================
-
-    private void manejarClicTablero(int mouseX, int mouseY) {
-        // Transformación geométrica: Pixel -> Objeto Dominio
-        Linea lineaIntentada = calcularLineaDesdePixeles(mouseX, mouseY);
-
-        if (lineaIntentada != null) {
-            System.out.println("[GameView] Clic detectado en línea: " + lineaIntentada.toString());
-            // DELEGACIÓN: La vista NO decide si es válida, solo avisa al controlador
-            controlador.onClicRealizarJugada(lineaIntentada);
-        }
-    }
-
-    /**
-     * Algoritmo de "Hitbox" (Caja de colisión).
-     * Convierte un clic (x,y) en la línea lógica más cercana si está dentro de la tolerancia.
-     */
-    private Linea calcularLineaDesdePixeles(int mx, int my) {
-        int anchoPanel = pnlLienzo.getWidth();
-        int altoPanel = pnlLienzo.getHeight();
-        int ladoMenor = Math.min(anchoPanel, altoPanel);
-        int areaUtil = ladoMenor - (2 * MARGEN);
-        int espacio = areaUtil / (DIMENSION_LOGICA - 1);
-
-        // 1. Revisar cercanía a líneas HORIZONTALES
-        for (int row = 0; row < DIMENSION_LOGICA; row++) {
-            for (int col = 0; col < DIMENSION_LOGICA - 1; col++) {
-                int x1 = MARGEN + (col * espacio);
-                int y1 = MARGEN + (row * espacio);
-                int x2 = x1 + espacio; // La línea termina en el siguiente punto horizontal
-
-                // ¿El mouse está dentro del segmento X y cerca del eje Y?
-                if (mx >= x1 && mx <= x2 && Math.abs(my - y1) <= TOLERANCIA_CLIC) {
-                    return new Linea(new Punto(col, row), new Punto(col + 1, row));
+        // Verticales
+        for (int col = 0; col < m.dim; col++) {
+            for (int row = 0; row < m.dim - 1; row++) {
+                int x1 = m.originX + (col * m.espacio);
+                int y1 = m.originY + (row * m.espacio);
+                int y2 = y1 + m.espacio;
+                if (mouseY >= y1 && mouseY <= y2) {
+                    double dist = Math.abs(mouseX - x1);
+                    if (dist <= tolerancia && dist < menorDistancia) {
+                        menorDistancia = dist;
+                        mejorLinea = new Linea(new Punto(col, row), new Punto(col, row + 1));
+                    }
                 }
             }
         }
-
-        // 2. Revisar cercanía a líneas VERTICALES
-        for (int col = 0; col < DIMENSION_LOGICA; col++) {
-            for (int row = 0; row < DIMENSION_LOGICA - 1; row++) {
-                int x1 = MARGEN + (col * espacio);
-                int y1 = MARGEN + (row * espacio);
-                int y2 = y1 + espacio; // La línea termina en el siguiente punto vertical
-
-                // ¿El mouse está dentro del segmento Y y cerca del eje X?
-                if (my >= y1 && my <= y2 && Math.abs(mx - x1) <= TOLERANCIA_CLIC) {
-                    return new Linea(new Punto(col, row), new Punto(col, row + 1));
-                }
-            }
+        if (mejorLinea != null) {
+            controlador.onClicRealizarJugada(mejorLinea);
         }
-
-        return null; // Clic en espacio vacío
     }
 
-    // =========================================================
-    // IMPLEMENTACIÓN DE OBSERVER (MODELO -> VISTA)
-    // =========================================================
+    private MetricasTablero calcularMetricas() {
+        int dim = modeloLeible.getDimension();
+        int w = pnlLienzo.getWidth();
+        int h = pnlLienzo.getHeight();
+        int ladoTablero = Math.min(w, h) - 100; 
+        if (ladoTablero < 100) ladoTablero = 100;
+        int espacio = ladoTablero / (dim - 1);
+        int ladoReal = espacio * (dim - 1);
+        int offsetX = (w - ladoReal) / 2;
+        int offsetY = (h - ladoReal) / 2;
+        return new MetricasTablero(offsetX, offsetY, espacio, dim);
+    }
+    private record MetricasTablero(int originX, int originY, int espacio, int dim) {}
+
+    private Punto getTopLeft(List<Linea> lineas) {
+        int minX = Integer.MAX_VALUE; 
+        int minY = Integer.MAX_VALUE;
+        for(Linea l : lineas) {
+            minX = Math.min(minX, Math.min(l.p1.getX(), l.p2.getX()));
+            minY = Math.min(minY, Math.min(l.p1.getY(), l.p2.getY()));
+        }
+        if (minX == Integer.MAX_VALUE) return null;
+        return new Punto(minX, minY);
+    }
+    
+    private Color decodificarColor(String hex) {
+        try { return Color.decode(hex); } catch(Exception e) { return Color.GRAY; }
+    }
+    
+    private void actualizarTitulo() {
+        if(modeloLeible == null) return;
+        StringBuilder sb = new StringBuilder("Timbiriche");
+        if(modeloLeible.getJugadorLocal() != null) sb.append(" | Soy: ").append(modeloLeible.getJugadorLocal().getNombre());
+        setTitle(sb.toString());
+    }
 
     @Override
     public void actualizar() {
-        // El modelo cambió (llegó jugada de red o local).
-        // 1. Actualizar textos (Turnos)
-        actualizarTitulo();
-        
-        // 2. Repintar el lienzo
-        pnlLienzo.repaint();
+        actualizarTitulo(); // Solo título ventana
+        actualizarMarcador(); // Panel derecho (Turno + Lista)
+        pnlLienzo.repaint(); // Tablero
     }
-
-    private void actualizarTitulo() {
-        if (modeloLeible == null) return;
-        
-        StringBuilder sb = new StringBuilder("Timbiriche");
-        
-        Jugador local = modeloLeible.getJugadorLocal();
-        if (local != null) sb.append(" | Soy: ").append(local.getNombre());
-        
-        Jugador turno = modeloLeible.getTurnoActual();
-        if (turno != null) sb.append(" | Turno de: ").append(turno.getNombre());
-        
-        this.setTitle(sb.toString());
-    }
-
-    // =========================================================
-    // MÉTODOS AUXILIARES VISUALES
-    // =========================================================
-
-    private Color decodificarColor(String hexColor) {
-        if (hexColor == null || hexColor.isEmpty()) return Color.GRAY;
-        try {
-            return Color.decode(hexColor);
-        } catch (NumberFormatException e) {
-            return Color.GRAY;
-        }
-    }
-
-    /**
-     * Algoritmo visual para encontrar la esquina superior-izquierda de un cuadro
-     * basado en sus 4 líneas. Necesario para saber dónde hacer fillRect.
-     */
-    private Punto calcularEsquinaSuperiorIzquierda(List<Linea> lineasCuadro) {
-        /* Lógica: El punto (x,y) más pequeño de todas las líneas es la esquina TL. */
-        int minX = Integer.MAX_VALUE;
-        int minY = Integer.MAX_VALUE;
-
-        for (Linea l : lineasCuadro) {
-            if (l.p1.getX() < minX) minX = l.p1.getX();
-            if (l.p2.getX() < minX) minX = l.p2.getX();
-            
-            if (l.p1.getY() < minY) minY = l.p1.getY();
-            if (l.p2.getY() < minY) minY = l.p2.getY();
-        }
-        
-        if (minX == Integer.MAX_VALUE) return null; // Error data
-        return new Punto(minX, minY);
-    }
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -309,7 +350,7 @@ public class GameView extends javax.swing.JFrame implements Observer {
         PnlFondo.setLayout(PnlFondoLayout);
         PnlFondoLayout.setHorizontalGroup(
             PnlFondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 680, Short.MAX_VALUE)
+            .addGap(0, 755, Short.MAX_VALUE)
         );
         PnlFondoLayout.setVerticalGroup(
             PnlFondoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -334,27 +375,73 @@ public class GameView extends javax.swing.JFrame implements Observer {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-//        try
-//        {
-//            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels())
-//            {
-//                if ("Nimbus".equals(info.getName()))
-//                {
-//                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-//                    break;
-//                }
-//            }
-//        } catch (Exception ex)
-//        {
-//            java.util.logging.Logger.getLogger(GameView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-//        }
-//        // Crear instancias (ejemplo; inyectar reales)
-//        MotorJuego motor = new MotorJuego(new JsonSerializer());
-//        ModelView model = new ModelView(motor);
-//        ReceptorExternoImpl receptor = new ReceptorExternoImpl(motor, new JsonSerializer());
-//        Jugador local = new Jugador("Player1", Color.RED);
-//        ControllerView ctrl = new ControllerView(receptor, local, model);
-//        java.awt.EventQueue.invokeLater(() -> new GameView(ctrl, model).setVisible(true));
+        // 1. Configurar Look and Feel
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (Exception ex) {
+            java.util.logging.Logger.getLogger(GameView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+
+        // 2. Ejecutar la ventana
+        java.awt.EventQueue.invokeLater(() -> {
+            
+            // --- DATOS DUMMY ---
+            Jugador yo = new Jugador("Tester_UI", "#0000FF"); // Azul
+            Jugador rival = new Jugador("Rival", "#FF0000"); // Rojo
+            java.util.List<Jugador> listaJugadores = new java.util.ArrayList<>();
+            listaJugadores.add(yo);
+            listaJugadores.add(rival);
+
+            // --- 3. MOCK DEL MODELO (Corregido) ---
+            IModelViewLeible mockModelo = new IModelViewLeible() {
+                @Override public int getDimension() { return 20; }
+                @Override public List<Linea> getLineasDibujadas() { return new java.util.ArrayList<>(); }
+                @Override public List<Cuadro> getCuadrosRellenos() { return new java.util.ArrayList<>(); }
+                @Override public List<Jugador> getJugadores() { return listaJugadores; }
+                @Override public Jugador getTurnoActual() { return yo; }
+                @Override public Jugador getJugadorLocal() { return yo; }
+                
+                // --- MÉTODOS VISUALES IMPLEMENTADOS ---
+                @Override
+                public String getAvatarJugador(Jugador jugador) {
+                    return "default.png"; // Retorno seguro
+                }
+
+                @Override
+                public Color getColorJugador(Jugador jugador) {
+                    // Lógica simple para convertir el String hex del jugador a Color real
+                    if (jugador != null && jugador.getColor() != null) {
+                        try {
+                            return Color.decode(jugador.getColor());
+                        } catch (NumberFormatException e) {
+                            return Color.BLACK; // Fallback si el hex está mal
+                        }
+                    }
+                    return Color.BLACK;
+                }
+                
+                // Métodos vacíos de suscripción
+                @Override public void agregarObservador(Observer o) {}
+                @Override public void removerObservador(Observer o) {}
+                @Override public void notificarObservadores() {}
+            };
+
+            // --- 4. MOCK DEL CONTROLADOR ---
+            ControllerView mockController = new ControllerView(null, yo) {
+                @Override
+                public void onClicRealizarJugada(Linea linea) {
+                    System.out.println("[TEST UI] Clic detectado: " + linea);
+                }
+            };
+
+            // --- 5. INICIAR VENTANA ---
+            new GameView(mockController, mockModelo).setVisible(true);
+        });
     }
 
 

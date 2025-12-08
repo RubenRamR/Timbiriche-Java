@@ -28,8 +28,9 @@ public interface IModelViewLeible extends Subjet {
 
     List<Cuadro> getCuadrosRellenos();
 
-    // Métodos visuales auxiliares
     String getAvatarJugador(Jugador jugador);
 
     java.awt.Color getColorJugador(Jugador jugador);
+
+    int getDimension();
 }
