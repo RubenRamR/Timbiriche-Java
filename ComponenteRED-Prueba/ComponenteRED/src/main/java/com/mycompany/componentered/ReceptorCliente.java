@@ -83,6 +83,14 @@ public class ReceptorCliente implements Runnable {
                     System.out.println("[RED-Entrada] Objeto reconstruido: " + dto.getTipo());
 
                     if (dto != null) {
+                        
+                        if (socket.getInetAddress() != null) {
+                            String ipReal = socket.getInetAddress().getHostAddress();
+                            dto.setIpRemitente(ipReal); 
+                            System.out.println("[RED-IP] IP Inyectada al DTO: " + ipReal);
+                        }
+                        // =========================================================
+
                         if (receptorExterno != null) {
                             
                             // DEBUG 4: Entrega a la capa superior
@@ -100,7 +108,6 @@ public class ReceptorCliente implements Runnable {
                     System.err.println("[RED-ERROR] Falló la conversión del mensaje: " + e.getMessage());
                 }
             }
-            
         } catch (Throwable t) {
             System.err.println("[RED-CRITICAL] El hilo de lectura murió: " + t.getMessage());
             t.printStackTrace();

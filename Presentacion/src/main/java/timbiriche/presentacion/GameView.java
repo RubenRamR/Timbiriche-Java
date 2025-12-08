@@ -588,7 +588,7 @@ public class GameView extends javax.swing.JFrame implements Observer {
             new GameView(mockController, mockModelo).setVisible(true);
         });
     }
-
+ 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel PnlFondo;

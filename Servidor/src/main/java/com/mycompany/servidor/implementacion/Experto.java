@@ -36,10 +36,6 @@ public class Experto implements IFuenteConocimiento {
 
     @Override
     public void procesarEvento(Evento evento) {
-        // --- CORRECCIÓN CRÍTICA ---
-        // Eliminamos la restricción de 'this.identificador.equals' para que el 
-        // Experto procese jugadas de CUALQUIER cliente conectado.
-
         if (evento.getTipo().equals(Protocolo.INTENTO_JUGADA.name()))
         {
             // Pasamos también el origen (quién hizo la jugada) para devolverlo en la respuesta

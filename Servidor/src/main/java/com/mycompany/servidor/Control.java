@@ -18,6 +18,7 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
 
     private IDispatcher dispatcher;
     private final Blackboard blackboard;
+    // Mapa: Clave = NombreJugador, Valor = IP Real (Ej. "192.168.1.5")
     private final Map<String, String> sesiones;
 
     public Control() {
@@ -34,21 +35,36 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
         return blackboard;
     }
 
+    // =========================================================================
     // ENTRADA
+    // =========================================================================
     @Override
     public void recibirMensaje(DataDTO datos) {
         System.out.println("[Control] Recibido DTO: " + datos.getTipo());
+
+        // Registramos la sesión usando la IP real que viene en el DTO
         if (!sesiones.containsKey(datos.getProyectoOrigen()))
         {
-            sesiones.put(datos.getProyectoOrigen(), datos.getProyectoOrigen());
-            System.out.println("[Control] Nueva sesión detectada y registrada: " + datos.getProyectoOrigen());
+
+            String ipReal = datos.getIpRemitente();
+
+            // Fallback de seguridad por si llega nulo
+            if (ipReal == null || ipReal.isEmpty())
+            {
+                ipReal = "127.0.0.1";
+            }
+
+            sesiones.put(datos.getProyectoOrigen(), ipReal);
+            System.out.println("[Control] Nueva sesión registrada: " + datos.getProyectoOrigen() + " -> IP: " + ipReal);
         }
 
         Evento evento = convertirDTOaEvento(datos);
         blackboard.publicarEvento(evento);
     }
 
-    // SALIDA LOOPBACK
+    // =========================================================================
+    // SALIDA (Procesamiento de Eventos)
+    // =========================================================================
     @Override
     public void procesarEvento(Evento evento) {
 
@@ -74,30 +90,41 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
         }
     }
 
+    // =========================================================================
+    // BROADCAST (LÓGICA DE ENVÍO)
+    // =========================================================================
     private void broadcastReal(DataDTO dto) {
         if (dispatcher == null)
         {
             return;
         }
 
-        // =================================================================
-//        System.out.println("[Control] Enviando Broadcast Simulado (9000, 9001, 9002)...");
-//        dispatcher.enviar(dto, "127.0.0.1", 9000); // Cliente Azul
-//        dispatcher.enviar(dto, "127.0.0.1", 9001); // Cliente Rojo
-//        dispatcher.enviar(dto, "127.0.0.1", 9002); // Cliente Morado
-//        // =================================================================
-//        // Recorremos las IPs de todos los jugadores conectados
-        for (String ipGuardada : sesiones.values())
+        // -----------------------------------------------------------------
+        // BLOQUE A: SIMULACIÓN LOCAL
+        // Descomenta esto SOLO si quieres probar 3 ventanas en UNA sola PC.
+        // -----------------------------------------------------------------
+        /*
+        // System.out.println("[Control] Enviando Broadcast Simulado (9000, 9001, 9002)...");
+        // dispatcher.enviar(dto, "127.0.0.1", 9000); // Azul
+        // dispatcher.enviar(dto, "127.0.0.1", 9001); // Rojo
+        // dispatcher.enviar(dto, "127.0.0.1", 9002); // Morado
+        // return; // Cortamos aquí para no ejecutar el bloque B
+         */
+        // -----------------------------------------------------------------
+        // BLOQUE B: PRODUCCIÓN LAN
+        // Usa las IPs reales guardadas y envía al puerto estándar 9000.
+        // -----------------------------------------------------------------
+        for (String ipDestino : sesiones.values())
         {
-            String ipDestino = ipGuardada;
 
-            // Parche de seguridad
-            if (ipDestino == null || !ipDestino.contains("."))
+            // Validación mínima
+            if (ipDestino == null || ipDestino.isEmpty())
             {
-                ipDestino = "127.0.0.1";
+                continue;
             }
 
-            System.out.println("[Control] Enviando a IP real: " + ipDestino);
+            System.out.println("[Control] Enviando a remoto: " + ipDestino);
+
             dispatcher.enviar(dto, ipDestino, 9000);
         }
     }
