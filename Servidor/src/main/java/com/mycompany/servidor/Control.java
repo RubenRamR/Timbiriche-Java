@@ -20,10 +20,12 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
     private final Blackboard blackboard;
     // Mapa: Clave = NombreJugador, Valor = IP Real (Ej. "192.168.1.5")
     private final Map<String, String> sesiones;
+    private final java.util.List<String> listaJugadoresJson;
 
     public Control() {
         this.blackboard = new Blackboard();
         this.sesiones = new HashMap<>();
+        this.listaJugadoresJson = new java.util.ArrayList<>();
         this.blackboard.suscribir(this);
     }
 
@@ -61,14 +63,26 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
         Evento evento = convertirDTOaEvento(datos);
         blackboard.publicarEvento(evento);
     }
-
-    // =========================================================================
-    // SALIDA (Procesamiento de Eventos)
-    // =========================================================================
+    
     @Override
     public void procesarEvento(Evento evento) {
+        if (evento.getTipo().equals("REGISTRO"))
+        {
+            String jsonJugador = evento.getDato().toString();
 
-        if (evento.getTipo().equals(EventosSistema.SOLICITUD_ENVIO))
+            // Evitar duplicados simples
+            if (!listaJugadoresJson.contains(jsonJugador))
+            {
+                listaJugadoresJson.add(jsonJugador);
+                System.out.println("[Control] Jugador registrado. Total: " + listaJugadoresJson.size());
+
+                DataDTO syncDTO = new DataDTO();
+                syncDTO.setTipo("LISTA_JUGADORES");
+                syncDTO.setPayload(listaJugadoresJson.toString());
+
+                broadcastReal(syncDTO);
+            }
+        } else if (evento.getTipo().equals(EventosSistema.SOLICITUD_ENVIO))
         {
 
             System.out.println("[Control] Solicitud de envío detectada: Envío");

@@ -53,8 +53,10 @@ public enum Protocolo {
     FIN_PARTIDA,
     // --- 3. INFRAESTRUCTURA INTERNA (BLACKBOARD) ---
     /**
-     * * Experto -> Control: "Necesito que envíes este DTO por la red". (Este es
-     * vital para romper el ciclo de dependencia en el servidor)
+     * * Experto -> Control: "Necesito que envíes este DTO por la red". (Este
+     * es vital para romper el ciclo de dependencia en el servidor)
      */
-    SOLICITUD_ENVIO
+    SOLICITUD_ENVIO,
+    LISTA_JUGADORES,
+    REGISTRO
 }

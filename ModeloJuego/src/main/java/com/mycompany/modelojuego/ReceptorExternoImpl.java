@@ -31,30 +31,24 @@ public class ReceptorExternoImpl implements IReceptorExterno {
 
     @Override
     public void recibirMensaje(DataDTO datos) {
-        if (datos == null || datos.getTipo() == null)
-        {
+        if (datos == null || datos.getTipo() == null) {
             return;
         }
 
-        try
-        {
+        try {
             // Convertimos el String del DTO al Enum Protocolo
             Protocolo protocolo = Protocolo.valueOf(datos.getTipo());
 
-            switch (protocolo)
-            {
+            switch (protocolo) {
                 // ============================================================
                 // CASO 1: JUGADA LOCAL (Viene de tu ControllerView)
                 // ============================================================
                 case INTENTO_JUGADA:
                     System.out.println("Receptor: Recibido INTENTO_JUGADA local.");
                     Linea lineaLocal = deserializarLinea(datos.getPayload());
-                    if (lineaLocal != null)
-                    {
-                        // Pasamos al motor para que valide y envíe a la red
+                    if (lineaLocal != null) {
                         motorJuego.realizarJugadaLocal(lineaLocal);
-                    } else
-                    {
+                    } else {
                         System.err.println("Receptor: Error al deserializar línea local.");
                     }
                     break;
@@ -72,23 +66,31 @@ public class ReceptorExternoImpl implements IReceptorExterno {
                     procesarJugadaRemota(datos, true);
                     break;
 
+                // ============================================================
+                // CASO 3: GESTIÓN DE SALA / LOBBY (NUEVO)
+                // ============================================================
+                case LISTA_JUGADORES:
+                    System.out.println("Receptor: Recibida lista de jugadores actualizada.");
+                    // Le pasamos el JSON crudo al motor para que actualice su lista
+                    motorJuego.actualizarListaDeJugadores(datos.getPayload());
+                    break;
+
                 case JUGADA_INVALIDA:
                     System.err.println("SERVIDOR: Jugada Rechazada.");
                     break;
 
                 // Otros casos que no requieren acción inmediata
+                case REGISTRO: // El cliente envía REGISTRO, pero raramente lo recibe de vuelta
                 case SOLICITUD_LOGIN:
                 case INICIO_PARTIDA:
                 case SOLICITUD_ENVIO:
                     break;
 
                 default:
-                    // AQUÍ ES DONDE ESTABAS CAYENDO
                     System.out.println("Receptor: Protocolo no manejado -> " + protocolo);
                     break;
             }
-        } catch (IllegalArgumentException e)
-        {
+        } catch (IllegalArgumentException e) {
             System.err.println("Receptor Error: Protocolo desconocido: " + datos.getTipo());
         }
     }

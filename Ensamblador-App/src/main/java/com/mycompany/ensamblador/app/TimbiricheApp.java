@@ -14,6 +14,7 @@ import com.mycompany.componentered.FabricaRED;
 import com.mycompany.dominio.Jugador;
 import com.mycompany.dominio.Linea;
 import com.mycompany.dominio.Punto;
+import com.mycompany.dtos.DataDTO;
 import com.mycompany.interfacesdispatcher.IDispatcher;
 import com.mycompany.interfacesreceptor.IReceptorExterno;
 import com.mycompany.modelojuego.MotorJuego;
@@ -35,81 +36,69 @@ import timbiriche.presentacion.ModelView;
 public class TimbiricheApp {
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                // ===========================================================
-                // 1. CONFIGURACIÓN DE CONEXIÓN (UI)
-                // ===========================================================
-                
-                // A. Pedir Nombre
-                String nombre = JOptionPane.showInputDialog(null, "Escribe tu nombre:", "Login", JOptionPane.QUESTION_MESSAGE);
-                if (nombre == null || nombre.trim().isEmpty()) {
-                    nombre = "Jugador_" + new Random().nextInt(1000);
+        SwingUtilities.invokeLater(() ->
+        {
+            try
+            {
+                // 1. GENERACIÓN AUTOMÁTICA DE IDENTIDAD (Random)
+                // Nombre aleatorio ej: "Jugador_452"
+                String nombre = "Jugador_" + new Random().nextInt(1000);
+
+                // Color aleatorio Hexadecimal ej: "#A3F201"
+                String hexColor = String.format("#%06x", new Random().nextInt(0xffffff + 1));
+
+                // Solo preguntamos la IP (para que puedas cambiar entre Local y LAN)
+                String ipServidor = JOptionPane.showInputDialog("IP del Servidor:", "127.0.0.1");
+                if (ipServidor == null || ipServidor.trim().isEmpty())
+                {
+                    return;
                 }
-                
-                // B. Pedir IP del Servidor
-                // Si eres el Host, deja localhost. Si es tu amigo, debe poner TU IP (ej. 192.168.1.50)
-                String ipServidor = JOptionPane.showInputDialog(null, "IP del Servidor (Host):", "127.0.0.1");
-                if (ipServidor == null || ipServidor.trim().isEmpty()) {
-                    ipServidor = "127.0.0.1";
-                }
 
-                // C. Configuración de Puertos
-                int puertoServidor = 8080;
-                int puertoLocal = 9000; // ESTÁNDAR: Todos escuchan en el 9000 en su propia PC
+                // 2. CREAR JUGADOR LOCAL
+                Jugador yo = new Jugador(nombre, hexColor);
+                System.out.println("=== INICIANDO: " + nombre + " (" + hexColor + ") ===");
 
-                System.out.println("=== INICIANDO TIMBIRICHE ===");
-                System.out.println("Soy: " + nombre);
-                System.out.println("Conectando a: " + ipServidor);
-
-                // ===========================================================
-                // 2. CONSTRUCCIÓN DEL NÚCLEO
-                // ===========================================================
-                
-                // Colores aleatorios para diferenciar
-                String colorHex = String.format("#%06x", new Random().nextInt(0xffffff + 1));
-                Jugador local = new Jugador(nombre, colorHex);
-                
-                // Motor
+                // 3. MOTOR (Inicia sin rivales, esperando la lista del server)
                 MotorJuego motor = new MotorJuego();
-                motor.setJugadorLocal(local);
+                motor.setJugadorLocal(yo);
+                motor.setListaJugadores(new ArrayList<>()); // Lista vacía al inicio
 
-                // IMPORTANTE: Para que el juego inicie sin lobby, agregamos al local
-                // y a un "Rival_Fantasma" para que la lógica de turnos no se rompa
-                // hasta que el servidor sincronice la lista real.
-                List<Jugador> listaInicial = new ArrayList<>();
-                listaInicial.add(local);
-                // listaInicial.add(new Jugador("Esperando...", "#CCCCCC")); 
-                motor.setListaJugadores(listaInicial);
-
-                // ===========================================================
-                // 3. CONEXIÓN DE RED
-                // ===========================================================
+                // 4. CONEXIÓN RED
                 IReceptorExterno receptor = new ReceptorExternoImpl(motor);
                 FabricaRED fabricaRed = new FabricaRED();
-                
-                // Aquí se levanta el Socket en el puerto 9000 de ESTA laptop
-                IDispatcher dispatcher = fabricaRed.configurarRed(puertoLocal, ipServidor, puertoServidor);
-                
+
+                // Puerto local 9000 (Estándar)
+                IDispatcher dispatcher = fabricaRed.configurarRed(9000, ipServidor, 8080);
+
                 fabricaRed.establecerReceptor(receptor);
                 motor.addDispatcher(dispatcher);
 
-                // ===========================================================
-                // 4. PRESENTACIÓN
-                // ===========================================================
+                // 5. GUI
                 ModelView modelView = new ModelView(motor);
-                ControllerView controller = new ControllerView(receptor, local);
+                ControllerView controller = new ControllerView(receptor, yo);
                 GameView view = new GameView(controller, modelView);
-                
                 view.setVisible(true);
-                
-                // Opcional: Enviar un saludo al servidor para registrar la IP
-                // motor.solicitarIngreso(nombre, colorHex); 
 
-            } catch (Exception e) {
+                // =========================================================
+                // 6. REGISTRO AUTOMÁTICO
+                // Enviamos nuestros datos random al servidor para que nos agregue
+                // =========================================================
+                DataDTO registroDTO = new DataDTO();
+                registroDTO.setTipo("REGISTRO");
+                registroDTO.setProyectoOrigen(nombre);
+                String jsonJugador = "{"
+                        + "\"nombre\":\"" + yo.getNombre() + "\","
+                        + "\"color\":\"" + yo.getColor() + "\","
+                        + "\"puntaje\":0"
+                        + "}";
+
+                registroDTO.setPayload(jsonJugador);
+                // Enviamos solicitud
+                dispatcher.enviar(registroDTO, ipServidor, 8080);
+
+            } catch (Exception e)
+            {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Error al iniciar: " + e.getMessage());
-                System.exit(1);
             }
         });
     }
