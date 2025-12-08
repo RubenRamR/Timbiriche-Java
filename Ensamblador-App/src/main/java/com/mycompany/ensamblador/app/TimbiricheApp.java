@@ -35,84 +35,80 @@ import timbiriche.presentacion.ModelView;
 public class TimbiricheApp {
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() ->
-        {
-            try
-            {
-                System.out.println("=== INICIANDO CLIENTE TIMBIRICHE ===");
+        SwingUtilities.invokeLater(() -> {
+            try {
+                // ===========================================================
+                // 1. CONFIGURACIÓN DE CONEXIÓN (UI)
+                // ===========================================================
+                
+                // A. Pedir Nombre
+                String nombre = JOptionPane.showInputDialog(null, "Escribe tu nombre:", "Login", JOptionPane.QUESTION_MESSAGE);
+                if (nombre == null || nombre.trim().isEmpty()) {
+                    nombre = "Jugador_" + new Random().nextInt(1000);
+                }
+                
+                // B. Pedir IP del Servidor
+                // Si eres el Host, deja localhost. Si es tu amigo, debe poner TU IP (ej. 192.168.1.50)
+                String ipServidor = JOptionPane.showInputDialog(null, "IP del Servidor (Host):", "127.0.0.1");
+                if (ipServidor == null || ipServidor.trim().isEmpty()) {
+                    ipServidor = "127.0.0.1";
+                }
 
-                // -----------------------------------------------------------
-                // 1. CONFIGURACIÓN DE USUARIO Y RED (Hardcoded para Pruebas)
-                // -----------------------------------------------------------
-                // Definimos al jugador de esta máquina
-                Jugador local = new Jugador("Jugador_Local", "#0000FF"); // Azul
+                // C. Configuración de Puertos
+                int puertoServidor = 8080;
+                int puertoLocal = 9000; // ESTÁNDAR: Todos escuchan en el 9000 en su propia PC
 
-                // Simulamos un rival para que la lógica de turnos funcione
-                Jugador remoto = new Jugador("Rival_Remoto", "#FF0000"); // Rojo
+                System.out.println("=== INICIANDO TIMBIRICHE ===");
+                System.out.println("Soy: " + nombre);
+                System.out.println("Conectando a: " + ipServidor);
 
-                String ipServidor = "127.0.0.1";
-                int puertoServidor = 8080; // Puerto donde escucha tu Servidor
-                int puertoCliente = 9000;     // 0 = Automático
-
-                // -----------------------------------------------------------
-                // 2. CAPA LÓGICA (Core)
-                // -----------------------------------------------------------
+                // ===========================================================
+                // 2. CONSTRUCCIÓN DEL NÚCLEO
+                // ===========================================================
+                
+                // Colores aleatorios para diferenciar
+                String colorHex = String.format("#%06x", new Random().nextInt(0xffffff + 1));
+                Jugador local = new Jugador(nombre, colorHex);
+                
+                // Motor
                 MotorJuego motor = new MotorJuego();
-
-                // 2. CONFIGURACIÓN
-                // Tamaño para tu prueba
-                int TAMANO_PRUEBA = 30;
-                motor.configurarTablero(TAMANO_PRUEBA);
                 motor.setJugadorLocal(local);
 
+                // IMPORTANTE: Para que el juego inicie sin lobby, agregamos al local
+                // y a un "Rival_Fantasma" para que la lógica de turnos no se rompa
+                // hasta que el servidor sincronice la lista real.
                 List<Jugador> listaInicial = new ArrayList<>();
                 listaInicial.add(local);
-//                Comentarear linea de abajo para probar en remoto
-//                listaInicial.add(remoto);
-                motor.setListaJugadores(listaInicial); // Esto activa el turno del primer jugador
+                // listaInicial.add(new Jugador("Esperando...", "#CCCCCC")); 
+                motor.setListaJugadores(listaInicial);
 
-                // -----------------------------------------------------------
-                // 3. CAPA DE INFRAESTRUCTURA (Red)
-                // -----------------------------------------------------------
-                // A. Entrada (Receptor): Recibe mensajes y se los da al Motor
+                // ===========================================================
+                // 3. CONEXIÓN DE RED
+                // ===========================================================
                 IReceptorExterno receptor = new ReceptorExternoImpl(motor);
-
-                // B. Salida (Dispatcher): Motor envía mensajes a la red
                 FabricaRED fabricaRed = new FabricaRED();
-
-                // Configurar sockets y obtener el objeto para enviar
-                IDispatcher dispatcher = fabricaRed.configurarRed(puertoCliente, ipServidor, puertoServidor);
-
-                // Conectar la entrada de red al receptor que creamos
+                
+                // Aquí se levanta el Socket en el puerto 9000 de ESTA laptop
+                IDispatcher dispatcher = fabricaRed.configurarRed(puertoLocal, ipServidor, puertoServidor);
+                
                 fabricaRed.establecerReceptor(receptor);
-
-                // Conectar la salida del motor al dispatcher
                 motor.addDispatcher(dispatcher);
 
-                // -----------------------------------------------------------
-                // 4. CAPA DE PRESENTACIÓN (MVC)
-                // -----------------------------------------------------------
-                // A. ViewModel (ModelView): Escucha cambios en el Motor
+                // ===========================================================
+                // 4. PRESENTACIÓN
+                // ===========================================================
                 ModelView modelView = new ModelView(motor);
-
-                // B. Controller (ControllerView): Recibe inputs de la Vista
-                // Inyectamos 'receptor' para enviar datos y 'local' para firmarlos
                 ControllerView controller = new ControllerView(receptor, local);
-
-                // C. View (GameView): Dibuja y detecta clics
                 GameView view = new GameView(controller, modelView);
-
-                // -----------------------------------------------------------
-                // 5. ARRANQUE
-                // -----------------------------------------------------------
+                
                 view.setVisible(true);
-                System.out.println("-> Cliente iniciado correctamente.");
-                System.out.println("-> Turno actual: " + motor.getTurnoActual().getNombre());
+                
+                // Opcional: Enviar un saludo al servidor para registrar la IP
+                // motor.solicitarIngreso(nombre, colorHex); 
 
-            } catch (Exception e)
-            {
+            } catch (Exception e) {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Error fatal al iniciar: " + e.getMessage());
+                JOptionPane.showMessageDialog(null, "Error al iniciar: " + e.getMessage());
                 System.exit(1);
             }
         });

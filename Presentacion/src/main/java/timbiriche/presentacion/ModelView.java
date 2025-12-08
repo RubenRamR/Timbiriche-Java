@@ -33,7 +33,8 @@ public class ModelView implements IModelViewLeible, IMotorJuegoListener {
     private List<Jugador> jugadores;
     private List<Cuadro> cuadrosRellenos;
     private Jugador turnoActual;
-    private Object tamanoSeleccionado; // Según diagrama
+    private boolean juegoTerminado = false;
+    private Object tamanoSeleccionado;
 
     public ModelView(IMotorJuego motor) {
         this.motor = motor;
@@ -68,7 +69,8 @@ public class ModelView implements IModelViewLeible, IMotorJuegoListener {
 
     @Override
     public void onJuegoTerminado(Jugador ganador) {
-        System.out.println("Juego Terminado. Ganador: " + (ganador != null ? ganador.getNombre() : "Nadie"));
+        this.juegoTerminado = true;
+        System.out.println("MODELVIEW: Recibido fin de juego. Ganador: " + (ganador != null ? ganador.getNombre() : "Empate"));
         notificarObservadores();
     }
 
@@ -200,9 +202,15 @@ public class ModelView implements IModelViewLeible, IMotorJuegoListener {
 
     @Override
     public int getDimension() {
-        if (motor == null || motor.getTablero() == null) {
+        if (motor == null || motor.getTablero() == null)
+        {
             return 10;
         }
         return motor.getTablero().dimension;
+    }
+
+    @Override
+    public boolean esJuegoTerminado() {
+        return this.juegoTerminado;
     }
 }

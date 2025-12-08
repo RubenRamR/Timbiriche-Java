@@ -146,12 +146,16 @@ public class MotorJuego implements IMotorJuego {
      * @param jugadorRemitente El jugador que hizo la línea.
      */
     public void realizarJugadaRemota(Linea linea, Jugador jugadorRemitente) {
-        // 1. Agregar línea al tablero lógico
+        
+        if (jugadorRemitente != null) {
+            linea.setPropietario(jugadorRemitente);
+        }
+        // Agregar línea al tablero lógico
         boolean agregada = tablero.agregarLinea(linea);
 
         if (agregada)
         {
-            // 2. Verificar si se cerraron cuadros con esta línea
+            // Verificar si se cerraron cuadros con esta línea
             int cuadrosCerrados = contarYAsignarCuadrosCerrados(linea, jugadorRemitente);
 
             if (cuadrosCerrados > 0)
@@ -168,10 +172,47 @@ public class MotorJuego implements IMotorJuego {
                 avanzarTurno();
             }
 
-            // 3. Verificar Fin de Juego (Opcional, si tablero lleno)
-            // if (tablero.estaLleno()) { ... }
+            verificarFinDeJuego();
             // 4. Actualizar a todos los observadores (UI)
             notificarCambios();
+        }
+    }
+
+    // 2. Método para calcular si el tablero está lleno
+    private void verificarFinDeJuego() {
+        // 1. Calcular el total matemático de líneas posibles en un grid de puntos
+        // Fórmula: (Filas * líneas_horizontales) + (Columnas * líneas_verticales)
+        // Simplificado: 2 * N * (N - 1)
+        int dim = tablero.dimension;
+        int totalLineasPosibles = 2 * dim * (dim - 1);
+
+        // 2. Verificar si ya dibujamos todas las líneas
+        if (tablero.lineasDibujadas.size() >= totalLineasPosibles)
+        {
+
+            // 3. Determinar quién ganó (quien tenga más puntos)
+            Jugador ganador = null;
+            int maxPuntos = -1;
+
+            for (Jugador j : listaJugadores)
+            {
+                if (j.getPuntaje() > maxPuntos)
+                {
+                    maxPuntos = j.getPuntaje();
+                    ganador = j;
+                } else if (j.getPuntaje() == maxPuntos)
+                {
+                    // Lógica de empate opcional (o dejar ganador como el primero que llegó)
+                }
+            }
+
+            System.out.println("MOTOR: Fin de juego detectado. Ganador: " + (ganador != null ? ganador.getNombre() : "Nadie"));
+
+            // 4. Notificar a ModelView (y este a GameView)
+            for (IMotorJuegoListener l : listeners)
+            {
+                l.onJuegoTerminado(ganador);
+            }
         }
     }
 

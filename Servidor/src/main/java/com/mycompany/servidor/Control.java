@@ -79,10 +79,27 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
         {
             return;
         }
-        for (String idRed : sesiones.keySet())
-        {
-            dispatcher.enviar(dto, "127.0.0.1", 9000);
-        }
+
+        // =================================================================
+        System.out.println("[Control] Enviando Broadcast Simulado (9000, 9001, 9002)...");
+        dispatcher.enviar(dto, "127.0.0.1", 9000); // Cliente Azul
+        dispatcher.enviar(dto, "127.0.0.1", 9001); // Cliente Rojo
+        dispatcher.enviar(dto, "127.0.0.1", 9002); // Cliente Morado
+
+//        // =================================================================
+
+//        // Recorremos las IPs de todos los jugadores conectados
+//        for (String ipGuardada : sesiones.values()) {
+//            String ipDestino = ipGuardada;
+//            
+//            // Parche de seguridad
+//            if (ipDestino == null || !ipDestino.contains(".")) {
+//                ipDestino = "127.0.0.1";
+//            }
+//
+//            System.out.println("[Control] Enviando a IP real: " + ipDestino);
+//            dispatcher.enviar(dto, ipDestino, 9000);
+//        }
     }
 
     private Evento convertirDTOaEvento(DataDTO dto) {

@@ -14,6 +14,7 @@ public class Linea {
 
     public Punto p1;
     public Punto p2;
+    private Jugador propietario;
 
     public Linea() {
 
@@ -71,5 +72,13 @@ public class Linea {
     @Override
     public int hashCode() {
         return Objects.hash(p1, p2);
+    }
+
+    public void setPropietario(Jugador propietario) {
+        this.propietario = propietario;
+    }
+
+    public Jugador getPropietario() {
+        return this.propietario;
     }
 }
