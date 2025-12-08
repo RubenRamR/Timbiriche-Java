@@ -4,47 +4,72 @@
  */
 package com.mycompany.dominio;
 
+import java.util.Objects;
+
 /**
  *
  * @author rramirez
  */
 public class Linea {
-    private Punto p1;
-    private Punto p2;
 
-    public Linea(Punto p1, Punto p2) {
-        this.p1 = p1;
-        this.p2 = p2;
+    public Punto p1;
+    public Punto p2;
+
+    public Linea() {
+
     }
 
-    public Punto getP1() { return p1; }
-    public Punto getP2() { return p2; }
+    public Linea(Punto pA, Punto pB) {
+        // Normalizamos la línea para que (0,0)->(0,1) sea igual a (0,1)->(0,0)
+        // Esto simplifica el esIgual
+        if (pA.getX() < pB.getX() || (pA.getX() == pB.getX() && pA.getY() < pB.getY()))
+        {
+            this.p1 = pA;
+            this.p2 = pB;
+        } else
+        {
+            this.p1 = pB;
+            this.p2 = pA;
+        }
+    }
 
-    /**
-     * Verifica si esta línea es igual a otra, sin importar el orden de los puntos.
-     * Ejemplo: (0,0)->(0,1) es igual a (0,1)->(0,0).
-     */
     public boolean esIgual(Linea otra) {
-        if (otra == null) return false;
-        return (this.p1.equals(otra.p1) && this.p2.equals(otra.p2)) ||
-               (this.p1.equals(otra.p2) && this.p2.equals(otra.p1));
+        if (otra == null)
+        {
+            return false;
+        }
+        return this.equals(otra);
+    }
+
+    public boolean esHorizontal() {
+        return p1.getY() == p2.getY();
+    }
+
+    public boolean verificarCompleta() {
+        return p1 != null && p2 != null;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+        {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass())
+        {
+            return false;
+        }
         Linea linea = (Linea) o;
-        return esIgual(linea);
+        return Objects.equals(p1, linea.p1) && Objects.equals(p2, linea.p2);
+    }
+
+    @Override
+    public String toString() {
+        return "Linea{" + "p1=" + p1 + ", p2=" + p2 + '}';
     }
 
     @Override
     public int hashCode() {
-        return p1.hashCode() + p2.hashCode();
-    }
-    
-    @Override
-    public String toString() {
-        return "[" + p1 + " - " + p2 + "]";
+        return Objects.hash(p1, p2);
     }
 }

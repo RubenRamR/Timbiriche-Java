@@ -4,6 +4,7 @@
  */
 package com.mycompany.dominio;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,53 +12,45 @@ import java.util.List;
  *
  * @author rramirez
  */
-
 public class Cuadro {
 
-    private List<Linea> lineas; // Líneas que actualmente rodean este cuadro
-    private Jugador propietario;
-    private boolean completado;
+    private List<Linea> lineas; // Debe contener exactamente 4 líneas
+    public Jugador propietario;
+    public boolean completado;
 
-    // Atributos auxiliares para saber qué líneas DEBERÍAN formar este cuadro
-    // Esto ayuda a validar si una línea nueva pertenece aquí.
-    // No están en el UML explícito, pero son necesarios para la lógica interna,
-    // o bien se calculan en el Tablero. Aquí asumiremos que Tablero le pasa las líneas.
-    public Cuadro() {
-        this.lineas = new ArrayList<>();
+    public Cuadro(List<Linea> lineas) {
+        this.lineas = lineas;
         this.completado = false;
         this.propietario = null;
     }
 
-    // Constructor opcional si queremos inicializar lista
-    public Cuadro(List<Linea> lineasIniciales) {
-        this.lineas = lineasIniciales;
-        this.completado = verificarCompletado();
-    }
-
     /**
-     * Agrega una línea al cuadro si no existe ya.
+     * Verifica si las 4 líneas del cuadro han sido dibujadas en el tablero
+     * global. Nota: El UML pasa List<Linea> en el constructor, pero la
+     * verificación depende de saber qué líneas están dibujadas.
+     *
+     * @param lineasDibujadas Lista global de líneas en el tablero.
      */
-    public void agregarLinea(Linea linea) {
-        if (!contieneLinea(linea))
+    public boolean verificarCompletado(List<Linea> lineasDibujadas) {
+        if (completado)
         {
-            lineas.add(linea);
+            return true;
         }
-    }
 
-    private boolean contieneLinea(Linea l) {
-        for (Linea existente : lineas)
+        int count = 0;
+        for (Linea lineaNecesaria : this.lineas)
         {
-            if (existente.esIgual(l))
+            for (Linea lineaDibujada : lineasDibujadas)
             {
-                return true;
+                if (lineaNecesaria.esIgual(lineaDibujada))
+                {
+                    count++;
+                    break;
+                }
             }
         }
-        return false;
-    }
 
-    public boolean verificarCompletado() {
-        // En Timbiriche un cuadro se cierra con 4 líneas
-        if (lineas.size() == 4)
+        if (count == 4)
         {
             this.completado = true;
             return true;
@@ -65,15 +58,28 @@ public class Cuadro {
         return false;
     }
 
-    public Jugador getPropietario() {
-        return propietario;
+    public void setPropietario(Jugador jugador) {
+        this.propietario = jugador;
     }
 
-    public void setPropietario(Jugador propietario) {
-        this.propietario = propietario;
+    public Jugador getPropietario() {
+        return propietario;
     }
 
     public boolean isCompletado() {
         return completado;
     }
+
+    public List<Linea> getLineas() {
+        return lineas;
+    }
+
+    public void setLineas(List<Linea> lineas) {
+        this.lineas = lineas;
+    }
+
+    public void setCompletado(boolean completado) {
+        this.completado = completado;
+    }
+
 }

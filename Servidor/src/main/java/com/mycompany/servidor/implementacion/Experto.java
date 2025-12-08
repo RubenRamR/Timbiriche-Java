@@ -36,50 +36,49 @@ public class Experto implements IFuenteConocimiento {
 
     @Override
     public void procesarEvento(Evento evento) {
-        System.out.println("[Experto] Procesando jugada de: " + this.identificador);
-        if (evento.getOrigen().equals(this.identificador))
+        // --- CORRECCIÓN CRÍTICA ---
+        // Eliminamos la restricción de 'this.identificador.equals' para que el 
+        // Experto procese jugadas de CUALQUIER cliente conectado.
+
+        if (evento.getTipo().equals(Protocolo.INTENTO_JUGADA.name()))
         {
+            // Pasamos también el origen (quién hizo la jugada) para devolverlo en la respuesta
+            String quienJugo = (String) evento.getOrigen();
+            System.out.println("[Experto] Procesando jugada recibida de: " + quienJugo);
 
-            if (evento.getTipo().equals(Protocolo.INTENTO_JUGADA.name()))
-            {
-
-                ejecutarLogica((String) evento.getDato());
-            }
+            ejecutarLogica((String) evento.getDato(), quienJugo);
         }
     }
 
-    private void ejecutarLogica(String payloadJson) {
-        // 1. VALIDAR TURNO 
-        Evento ultimoTurno = blackboard.obtenerUltimoEvento("TURNO_ACTUAL");
-        // Nota: Si es el primer turno y devuelve null, quizás debas dejar pasar o validar inicio.
-        if (ultimoTurno != null && !ultimoTurno.getDato().equals(this.identificador))
-        {
-            return;
-        }
-
-        // 2. VALIDAR ESTADO
+    // Modificamos para recibir quién hizo la jugada
+    private void ejecutarLogica(String payloadJson, String quienJugo) {
+        // 1. VALIDACIONES (Simplificadas para la prueba)
         if (!validarEstado(payloadJson))
         {
+            System.out.println("[Experto] Jugada inválida (ya existe en historial).");
             return;
         }
 
-        // 3. GUARDAR 
+        // 2. GUARDAR EN HISTORIA (Persistence/Log)
         Evento hecho = new Evento(
                 Protocolo.ACTUALIZAR_TABLERO.name(),
                 payloadJson,
-                this.identificador
+                quienJugo // Guardamos quién la hizo
         );
         blackboard.agregarEvento(hecho);
 
-        // 4. EVALUAR REGLAS
-        int puntos = evaluarReglas(payloadJson);
-
-        // 5. RESPONDER (Paso 29)
+        // 3. GENERAR RESPUESTA PARA EL CLIENTE
+        // Preparamos el DTO de vuelta
         DataDTO respuesta = new DataDTO(Protocolo.ACTUALIZAR_TABLERO);
+        respuesta.setPayload(payloadJson); // Devolvemos la línea para que la pinten
+        respuesta.setProyectoOrigen(quienJugo); // Decimos quién la pintó (para el color)
+
+        System.out.println("[Experto] Jugada válida. Enviando ACTUALIZAR_TABLERO a la red.");
         generarEventoSalida(respuesta);
     }
 
     private boolean validarEstado(String datos) {
+        // Evitar líneas duplicadas
         List<Evento> historia = blackboard.obtenerEventos();
         for (Evento e : historia)
         {
@@ -93,17 +92,12 @@ public class Experto implements IFuenteConocimiento {
     }
 
     private void generarEventoSalida(DataDTO dtoRespuesta) {
-        System.out.println("[Experto] Publicando solicitud de envío: " + dtoRespuesta.getTipo());
+        // Creamos el evento que el Dispatcher del servidor escuchará para enviar por Socket
         Evento solicitud = new Evento(
                 EventosSistema.SOLICITUD_ENVIO,
                 dtoRespuesta,
-                this.identificador
+                "SERVER"
         );
         blackboard.publicarEvento(solicitud);
-    }
-
-    private int evaluarReglas(String datos) {
-        // Lógica simulada: retorna 0 por ahora
-        return 0;
     }
 }

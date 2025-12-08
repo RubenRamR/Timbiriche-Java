@@ -4,7 +4,9 @@
  */
 package com.mycompany.dominio;
 
-import java.awt.Color; // Asumimos java.awt para el color
+import java.awt.Color;
+import java.io.Serializable;
+import java.util.Objects;
 
 /**
  *
@@ -12,51 +14,54 @@ import java.awt.Color; // Asumimos java.awt para el color
  */
 public class Jugador {
 
-    private String nombre;
-    private String rutaAvatar;
-    private Color color;
-    private int puntaje;
+    public String nombre;
+    public String rutaAvatar;
+    public String color;
+    public int puntaje;
 
     public Jugador() {
         this.puntaje = 0;
     }
 
-    public Jugador(String nombre, Color color) {
+    public Jugador(String nombre, String color) {
         this.nombre = nombre;
         this.color = color;
         this.puntaje = 0;
-        this.rutaAvatar = ""; 
+        this.rutaAvatar = ""; // Default
+    }
+
+    public void sumarPuntos(int puntos) {
+        this.puntaje += puntos;
     }
 
     public String getNombre() {
         return nombre;
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public String getRutaAvatar() {
-        return rutaAvatar;
-    }
-
-    public void setRutaAvatar(String rutaAvatar) {
-        this.rutaAvatar = rutaAvatar;
-    }
-
-    public Color getColor() {
-        return color;
-    }
-
-    public void setColor(Color color) {
-        this.color = color;
-    }
-
     public int getPuntaje() {
         return puntaje;
     }
 
-    public void agregarPunto() {
-        this.puntaje++;
+    public String getColor() {
+        return color;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+        {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass())
+        {
+            return false;
+        }
+        Jugador jugador = (Jugador) o;
+        return Objects.equals(nombre, jugador.nombre);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(nombre);
     }
 }

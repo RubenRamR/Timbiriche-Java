@@ -6,6 +6,12 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.20.0</version>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>InterfacesDispatcher</artifactId>
@@ -24,6 +30,11 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>InterfacesReceptor</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>IMotorJuego</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

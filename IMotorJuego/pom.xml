@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mycompany</groupId>
-    <artifactId>Ensamblador-App</artifactId>
+    <artifactId>IMotorJuego</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <dependencies>
@@ -12,23 +12,8 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.luishigareda</groupId>
-            <artifactId>Presentacion</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>ModeloJuego</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>ComponenteRED</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>IMotorJuego</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
@@ -36,6 +21,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <exec.mainClass>com.mycompany.ensamblador.app.EnsambladorApp</exec.mainClass>
+        <exec.mainClass>com.mycompany.imotorjuego.IMotorJuego</exec.mainClass>
     </properties>
 </project>

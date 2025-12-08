@@ -4,11 +4,18 @@
  */
 package com.mycompany.modelojuego;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mycompany.dominio.Jugador;
 import com.mycompany.dominio.Linea;
 import com.mycompany.dominio.Punto;
 import com.mycompany.dtos.DataDTO;
 import com.mycompany.interfacesreceptor.IReceptorExterno;
 import com.mycompany.protocolo.Protocolo;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -16,113 +23,121 @@ import com.mycompany.protocolo.Protocolo;
  */
 public class ReceptorExternoImpl implements IReceptorExterno {
 
-    // Referencia al núcleo de la lógica
     private MotorJuego motorJuego;
+    private ObjectMapper jsonMapper;
 
-    /**
-     * Constructor
-     *
-     * @param motorJuego Referencia al motor para poder inyectarle las jugadas
-     * que lleguen.
-     */
     public ReceptorExternoImpl(MotorJuego motorJuego) {
         this.motorJuego = motorJuego;
+        this.jsonMapper = new ObjectMapper();
     }
 
-    /**
-     * Recibe un mensaje genérico (DTO) desde la infraestructura de red. Analiza
-     * el tipo de mensaje (Protocolo) y delega a métodos privados.
-     *
-     * * @param datos El objeto de transferencia recibido.
-     */
     @Override
     public void recibirMensaje(DataDTO datos) {
-        // 1. Validaciones de seguridad
-        if (datos == null || datos.getTipo() == null) {
-            System.err.println("ReceptorExterno: Recibido mensaje nulo o sin tipo.");
+        if (datos == null || datos.getTipo() == null)
+        {
             return;
         }
 
-        String tipoMensaje = datos.getTipo();
+        try
+        {
+            // Convertimos el String del DTO al Enum Protocolo
+            Protocolo protocolo = Protocolo.valueOf(datos.getTipo());
 
-        // -------------------------------------------------------------
-        // CASO 1: Confirmación del Servidor (Viene de la RED)
-        // El servidor nos dice "Esta jugada es válida, dibújenla todos".
-        // -------------------------------------------------------------
-        if (tipoMensaje.equals(Protocolo.ACTUALIZAR_TABLERO.toString())) {
-            if (motorJuego != null) {
-                // Pasamos el DTO directo, ya que 'procesarJugadaRed' sabe deserializarlo
-                motorJuego.procesarJugadaRed(datos);
+            switch (protocolo)
+            {
+                // ============================================================
+                // CASO 1: JUGADA LOCAL (Viene de tu ControllerView)
+                // ============================================================
+                case INTENTO_JUGADA:
+                    System.out.println("Receptor: Recibido INTENTO_JUGADA local.");
+                    Linea lineaLocal = deserializarLinea(datos.getPayload());
+                    if (lineaLocal != null)
+                    {
+                        // Pasamos al motor para que valide y envíe a la red
+                        motorJuego.realizarJugadaLocal(lineaLocal);
+                    } else
+                    {
+                        System.err.println("Receptor: Error al deserializar línea local.");
+                    }
+                    break;
+
+                // ============================================================
+                // CASO 2: JUGADA REMOTA (Viene del Servidor)
+                // ============================================================
+                case ACTUALIZAR_TABLERO:
+                    System.out.println("Receptor: Recibido ACTUALIZAR_TABLERO del servidor.");
+                    procesarJugadaRemota(datos, false);
+                    break;
+
+                case CUADRO_CERRADO:
+                    System.out.println("Receptor: Recibido CUADRO_CERRADO del servidor.");
+                    procesarJugadaRemota(datos, true);
+                    break;
+
+                case JUGADA_INVALIDA:
+                    System.err.println("SERVIDOR: Jugada Rechazada.");
+                    break;
+
+                // Otros casos que no requieren acción inmediata
+                case SOLICITUD_LOGIN:
+                case INICIO_PARTIDA:
+                case SOLICITUD_ENVIO:
+                    break;
+
+                default:
+                    // AQUÍ ES DONDE ESTABAS CAYENDO
+                    System.out.println("Receptor: Protocolo no manejado -> " + protocolo);
+                    break;
             }
-        } 
-
-        // -------------------------------------------------------------
-        // CASO 2: Solicitud Local (Viene del ControllerView / UI)
-        // El usuario hizo clic. El controlador empaquetó un INTENTO_JUGADA.
-        // Aquí lo desempaquetamos y se lo pasamos al motor como "Acción Local".
-        // -------------------------------------------------------------
-        else if (tipoMensaje.equals(Protocolo.INTENTO_JUGADA.toString())) {
-            if (motorJuego != null) {
-                // Deserializamos el payload (String "x1,y1,x2,y2") a Objeto Linea
-                Linea linea = deserializarLinea(datos.getPayload());
-                
-                if (linea != null) {
-                    // Llamamos al flujo local del motor
-                    motorJuego.realizarJugadaLocal(linea);
-                } else {
-                    System.err.println("ReceptorExterno: Error al deserializar jugada local.");
-                }
-            }
-        }
-        
-        // -------------------------------------------------------------
-        // CASO 3: Inicio de Partida (Opcional pero recomendado)
-        // -------------------------------------------------------------
-        else if (tipoMensaje.equals(Protocolo.INICIO_PARTIDA.toString())) {
-             System.out.println("ReceptorExterno: Iniciando partida...");
-             // Aquí podrías notificar a la vista para quitar la pantalla de espera
-        }
-
-        // Otros casos (Login, Errores, etc.)
-        else {
-            System.out.println("ReceptorExterno: Tipo no procesado -> " + tipoMensaje);
+        } catch (IllegalArgumentException e)
+        {
+            System.err.println("Receptor Error: Protocolo desconocido: " + datos.getTipo());
         }
     }
 
-    /**
-     * Método auxiliar para convertir el String del payload nuevamente a un objeto Linea.
-     * Formato esperado: "x1,y1,x2,y2"
-     */
-    private Linea deserializarLinea(String payload) {
-        if (payload == null || payload.isEmpty()) return null;
-        
-        try {
-            String[] partes = payload.split(",");
-            if (partes.length < 4) return null;
+    private void procesarJugadaRemota(DataDTO datos, boolean cerroCuadro) {
+        Linea linea = deserializarLinea(datos.getPayload());
 
-            int x1 = Integer.parseInt(partes[0]);
-            int y1 = Integer.parseInt(partes[1]);
-            int x2 = Integer.parseInt(partes[2]);
-            int y2 = Integer.parseInt(partes[3]);
+        if (linea == null)
+        {
+            return;
+        }
 
-            // Asumiendo que tienes los constructores correctos en Punto y Linea
-            return new Linea(new Punto(x1, y1), new Punto(x2, y2));
-            
-        } catch (NumberFormatException e) {
-            System.err.println("Error formato numérico en payload: " + payload);
+        String nombreRemitente = datos.getProyectoOrigen();
+        Jugador jugadorRemitente = buscarJugadorPorNombre(nombreRemitente);
+
+        if (jugadorRemitente == null && nombreRemitente != null)
+        {
+            jugadorRemitente = new Jugador(nombreRemitente, "#000000");
+        }
+
+        motorJuego.realizarJugadaRemota(linea, jugadorRemitente);
+    }
+
+    private Linea deserializarLinea(String json) {
+        try
+        {
+            return jsonMapper.readValue(json, Linea.class);
+        } catch (JsonProcessingException ex)
+        {
+            Logger.getLogger(ReceptorExternoImpl.class.getName()).log(Level.SEVERE, "Error JSON", ex);
             return null;
         }
     }
 
-    /**
-     * Método privado (según tu diagrama) que concreta la acción de jugar.
-     * Delega la responsabilidad al método del motor diseñado para la RED.
-     */
-    private void realizarJugada(DataDTO datos) {
-        if (motorJuego != null)
+    private Jugador buscarJugadorPorNombre(String nombre) {
+        if (nombre == null)
         {
-            // Asegúrate de que este método sea 'public' en MotorJuego
-            motorJuego.procesarJugadaRed(datos);
+            return null;
         }
+        List<Jugador> jugadores = motorJuego.getJugadores();
+        for (Jugador j : jugadores)
+        {
+            if (j.getNombre().equals(nombre))
+            {
+                return j;
+            }
+        }
+        return null;
     }
 }

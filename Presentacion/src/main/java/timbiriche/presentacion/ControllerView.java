@@ -1,9 +1,13 @@
 package timbiriche.presentacion;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.dominio.*;
 import com.mycompany.dtos.DataDTO;
 import com.mycompany.interfacesreceptor.IReceptorExterno;
 import com.mycompany.protocolo.Protocolo;
+import java.awt.Color;
+import java.util.Map;
 
 /**
  * Controlador de la vista.
@@ -16,53 +20,66 @@ public class ControllerView {
 
     private IReceptorExterno receptorLogica;
     private Jugador jugadorLocal;
+    private ObjectMapper jsonMapper;
 
-    public ControllerView() {
-
-    }
-
-    /**
-     * Constructor
-     *
-     * @param receptorLogica Interfaz para comunicar con la capa de negocio/red.
-     * @param jugadorLocal Referencia al jugador local para firmar los mensajes.
-     */
     public ControllerView(IReceptorExterno receptorLogica, Jugador jugadorLocal) {
         this.receptorLogica = receptorLogica;
         this.jugadorLocal = jugadorLocal;
+        this.jsonMapper = new ObjectMapper();
     }
 
     /**
-     * Procesa el intento de jugada desde la interfaz gráfica.
-     *
-     * @param linea Objeto del dominio con los puntos p1 y p2 seleccionados.
+     * Procesa el clic del usuario en el tablero.
+     * Serializa la jugada y la envía como un DTO al receptor externo.
+     * @param linea La línea calculada por la vista.
      */
     public void onClicRealizarJugada(Linea linea) {
-        // Validación defensiva
-        if (linea == null || jugadorLocal == null)
-        {
+        if (linea == null) {
             return;
         }
 
-        // 1. Armar DTO usando Protocolo
-        // El constructor del DTO recibe el Enum del Protocolo directamente
-        DataDTO dto = new DataDTO(Protocolo.INTENTO_JUGADA);
+        try {
+            // 1. Crear DTO
+            DataDTO dto = new DataDTO(Protocolo.INTENTO_JUGADA);
+            
+            // 2. Serializar Payload
+            String lineaJson = jsonMapper.writeValueAsString(linea);
+            dto.setPayload(lineaJson);
 
-        // 2. Construir el Payload
-        // Como "estamos usando Puntos", serializamos las coordenadas exactas.
-        // Formato sugerido: "x1,y1,x2,y2" (fácil de partir con .split(","))
-        String payload = linea.getP1().getX() + "," + linea.getP1().getY() + ","
-                + linea.getP2().getX() + "," + linea.getP2().getY();
+            // 3. Asignar Origen (Vital para el servidor)
+            if (jugadorLocal != null) {
+                dto.setProyectoOrigen(jugadorLocal.getNombre());
+            } else {
+                dto.setProyectoOrigen("Anonimo");
+            }
 
-        dto.setPayload(payload);
-
-        // Asignamos quién realiza la acción (id o nombre del jugador)
-        dto.setProyectoOrigen(jugadorLocal.getNombre());
-
-        // 3. Mandar la jugada hacia la capa lógica a través de la interfaz.
-        if (receptorLogica != null)
-        {
+            // 4. Enviar
+            // Nota: Aunque el receptor suele ser para entrada, en esta arquitectura 
+            // el controlador lo usa para inyectar la jugada en el flujo del sistema.
             receptorLogica.recibirMensaje(dto);
+
+        } catch (JsonProcessingException e) {
+            System.err.println("ControllerView: Error al serializar jugada. " + e.getMessage());
         }
+    }
+
+    /**
+     * Método del diagrama para procesar DTOs entrantes directamente si fuera necesario.
+     * Retorna true si se procesó correctamente.
+     */
+    public boolean actualizarDesdeDTO(DataDTO estado) {
+        if (estado == null) return false;
+        // En esta arquitectura, el receptor maneja esto, pero cumplimos con el método del diagrama.
+        receptorLogica.recibirMensaje(estado);
+        return true;
+    }
+
+    /**
+     * Configura mapeo de colores para los jugadores (Lógica visual).
+     */
+    public void configurarColores(Map<Jugador, Color> colores) {
+        // Lógica para asignar colores específicos a jugadores si se requiere personalización
+        // Por ahora, el ModelView ya extrae el color del objeto Jugador.
+        System.out.println("Configurando colores personalizados para " + colores.size() + " jugadores.");
     }
 }

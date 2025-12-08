@@ -5,9 +5,9 @@
 package com.mycompany.servidor;
 
 public class Evento {
-    
+
     private final String tipo;
-    private final Object dato;   
+    private final Object dato;
     private final Object origen;
 
     public Evento(Enum<?> tipoEnum, Object dato, Object origen) {
@@ -15,7 +15,7 @@ public class Evento {
         this.dato = dato;
         this.origen = origen;
     }
-    
+
     public Evento(String tipo, Object dato, Object origen) {
         this.tipo = tipo;
         this.dato = dato;
@@ -26,7 +26,15 @@ public class Evento {
         return this.tipo.equals(tipoEnum.name());
     }
 
-    public String getTipo() { return tipo; }
-    public Object getDato() { return dato; }
-    public Object getOrigen() { return origen; }
+    public String getTipo() {
+        return tipo;
+    }
+
+    public Object getDato() {
+        return dato;
+    }
+
+    public Object getOrigen() {
+        return origen;
+    }
 }
