@@ -62,6 +62,7 @@ public class TimbiricheApp {
                 
                 List<Jugador> listaInicial = new ArrayList<>();
                 listaInicial.add(local);
+//                Comentarear linea de abajo para probar en remoto
 //                listaInicial.add(remoto);
                 motor.setListaJugadores(listaInicial); // Esto activa el turno del primer jugador
 
