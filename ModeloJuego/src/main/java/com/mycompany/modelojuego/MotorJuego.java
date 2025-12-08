@@ -22,13 +22,11 @@ import java.util.Map;
 
 public class MotorJuego implements IMotorJuego {
 
-    // --- ESTADO DEL JUEGO (MODELO) ---
     private Tablero tablero;
     private Jugador jugadorLocal;
     private Jugador turnoActual;
     private List<Jugador> listaJugadores;
 
-    // --- INFRAESTRUCTURA Y OBSERVADORES ---
     private List<IMotorJuegoListener> listeners;
     private List<IDispatcher> dispatchers;
     private ObjectMapper jsonMapper;
@@ -135,9 +133,6 @@ public class MotorJuego implements IMotorJuego {
         }
     }
 
-    // ==========================================
-    // LÓGICA DE JUEGO (CORE)
-    // ==========================================
     /**
      * Ejecuta una jugada que ha sido validada/recibida desde la red (o servidor
      * local). Esta es la "verdad" del juego.
@@ -178,19 +173,14 @@ public class MotorJuego implements IMotorJuego {
         }
     }
 
-    // 2. Método para calcular si el tablero está lleno
     private void verificarFinDeJuego() {
-        // 1. Calcular el total matemático de líneas posibles en un grid de puntos
-        // Fórmula: (Filas * líneas_horizontales) + (Columnas * líneas_verticales)
-        // Simplificado: 2 * N * (N - 1)
+        
         int dim = tablero.dimension;
         int totalLineasPosibles = 2 * dim * (dim - 1);
 
-        // 2. Verificar si ya dibujamos todas las líneas
         if (tablero.lineasDibujadas.size() >= totalLineasPosibles)
         {
 
-            // 3. Determinar quién ganó (quien tenga más puntos)
             Jugador ganador = null;
             int maxPuntos = -1;
 
@@ -202,13 +192,12 @@ public class MotorJuego implements IMotorJuego {
                     ganador = j;
                 } else if (j.getPuntaje() == maxPuntos)
                 {
-                    // Lógica de empate opcional (o dejar ganador como el primero que llegó)
+                    System.out.println("Empate");
                 }
             }
 
             System.out.println("MOTOR: Fin de juego detectado. Ganador: " + (ganador != null ? ganador.getNombre() : "Nadie"));
 
-            // 4. Notificar a ModelView (y este a GameView)
             for (IMotorJuegoListener l : listeners)
             {
                 l.onJuegoTerminado(ganador);
@@ -329,7 +318,7 @@ public class MotorJuego implements IMotorJuego {
     }
 
     @Override
-    public List<Jugador> getJugadores() {
+        public List<Jugador> getJugadores() {
         return listaJugadores;
     }
 }

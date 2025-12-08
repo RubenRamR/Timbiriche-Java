@@ -27,7 +27,7 @@ public class Jugador {
         this.nombre = nombre;
         this.color = color;
         this.puntaje = 0;
-        this.rutaAvatar = ""; // Default
+        this.rutaAvatar = "";
     }
 
     public void sumarPuntos(int puntos) {

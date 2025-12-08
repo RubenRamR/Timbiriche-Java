@@ -96,9 +96,6 @@ public class GameView extends javax.swing.JFrame implements Observer {
         actualizarMarcador();
     }
 
-    // =========================================================================
-    // LÓGICA DE MARCADOR (ACTUALIZADA)
-    // =========================================================================
     private void actualizarMarcador() {
         pnlMarcador.removeAll();
 
@@ -430,9 +427,9 @@ public class GameView extends javax.swing.JFrame implements Observer {
 
     @Override
     public void actualizar() {
-        actualizarTitulo(); // Solo título ventana
-        actualizarMarcador(); // Panel derecho (Turno + Lista)
-        pnlLienzo.repaint(); // Tablero
+        actualizarTitulo(); 
+        actualizarMarcador(); 
+        pnlLienzo.repaint(); 
     }
 
     /**

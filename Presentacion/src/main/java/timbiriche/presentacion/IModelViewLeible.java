@@ -33,6 +33,6 @@ public interface IModelViewLeible extends Subjet {
     java.awt.Color getColorJugador(Jugador jugador);
 
     int getDimension();
-    
+
     boolean esJuegoTerminado();
 }

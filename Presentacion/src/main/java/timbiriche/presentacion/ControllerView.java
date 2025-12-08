@@ -29,27 +29,32 @@ public class ControllerView {
     }
 
     /**
-     * Procesa el clic del usuario en el tablero.
-     * Serializa la jugada y la envía como un DTO al receptor externo.
+     * Procesa el clic del usuario en el tablero. Serializa la jugada y la envía
+     * como un DTO al receptor externo.
+     *
      * @param linea La línea calculada por la vista.
      */
     public void onClicRealizarJugada(Linea linea) {
-        if (linea == null) {
+        if (linea == null)
+        {
             return;
         }
 
-        try {
+        try
+        {
             // 1. Crear DTO
             DataDTO dto = new DataDTO(Protocolo.INTENTO_JUGADA);
-            
+
             // 2. Serializar Payload
             String lineaJson = jsonMapper.writeValueAsString(linea);
             dto.setPayload(lineaJson);
 
             // 3. Asignar Origen (Vital para el servidor)
-            if (jugadorLocal != null) {
+            if (jugadorLocal != null)
+            {
                 dto.setProyectoOrigen(jugadorLocal.getNombre());
-            } else {
+            } else
+            {
                 dto.setProyectoOrigen("Anonimo");
             }
 
@@ -58,28 +63,22 @@ public class ControllerView {
             // el controlador lo usa para inyectar la jugada en el flujo del sistema.
             receptorLogica.recibirMensaje(dto);
 
-        } catch (JsonProcessingException e) {
+        } catch (JsonProcessingException e)
+        {
             System.err.println("ControllerView: Error al serializar jugada. " + e.getMessage());
         }
     }
 
     /**
-     * Método del diagrama para procesar DTOs entrantes directamente si fuera necesario.
-     * Retorna true si se procesó correctamente.
+     * Método del diagrama para procesar DTOs entrantes directamente si fuera
+     * necesario. Retorna true si se procesó correctamente.
      */
     public boolean actualizarDesdeDTO(DataDTO estado) {
-        if (estado == null) return false;
-        // En esta arquitectura, el receptor maneja esto, pero cumplimos con el método del diagrama.
+        if (estado == null)
+        {
+            return false;
+        }
         receptorLogica.recibirMensaje(estado);
         return true;
-    }
-
-    /**
-     * Configura mapeo de colores para los jugadores (Lógica visual).
-     */
-    public void configurarColores(Map<Jugador, Color> colores) {
-        // Lógica para asignar colores específicos a jugadores si se requiere personalización
-        // Por ahora, el ModelView ya extrae el color del objeto Jugador.
-        System.out.println("Configurando colores personalizados para " + colores.size() + " jugadores.");
     }
 }

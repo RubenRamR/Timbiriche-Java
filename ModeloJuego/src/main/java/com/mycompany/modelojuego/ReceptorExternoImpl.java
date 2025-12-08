@@ -5,11 +5,9 @@
 package com.mycompany.modelojuego;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.dominio.Jugador;
 import com.mycompany.dominio.Linea;
-import com.mycompany.dominio.Punto;
 import com.mycompany.dtos.DataDTO;
 import com.mycompany.interfacesreceptor.IReceptorExterno;
 import com.mycompany.protocolo.Protocolo;
