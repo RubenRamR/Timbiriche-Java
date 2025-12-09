@@ -35,7 +35,7 @@ public class MotorJuego implements IMotorJuego {
      * Constructor. Inicializa el tablero y las listas.
      */
     public MotorJuego() {
-        this.tablero = new Tablero(10);
+        this.tablero = new Tablero(3);
         this.listeners = new ArrayList<>();
         this.dispatchers = new ArrayList<>();
         this.listaJugadores = new ArrayList<>();

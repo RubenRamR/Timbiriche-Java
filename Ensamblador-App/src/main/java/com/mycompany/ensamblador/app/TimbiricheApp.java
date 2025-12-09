@@ -40,14 +40,11 @@ public class TimbiricheApp {
         {
             try
             {
-                // 1. GENERACIÓN AUTOMÁTICA DE IDENTIDAD (Random)
-                // Nombre aleatorio ej: "Jugador_452"
+                
                 String nombre = "Jugador_" + new Random().nextInt(1000);
 
-                // Color aleatorio Hexadecimal ej: "#A3F201"
                 String hexColor = String.format("#%06x", new Random().nextInt(0xffffff + 1));
 
-                // Solo preguntamos la IP (para que puedas cambiar entre Local y LAN)
                 String ipServidor = JOptionPane.showInputDialog("IP del Servidor:", "127.0.0.1");
                 if (ipServidor == null || ipServidor.trim().isEmpty())
                 {
@@ -81,7 +78,6 @@ public class TimbiricheApp {
 
                 // =========================================================
                 // 6. REGISTRO AUTOMÁTICO
-                // Enviamos nuestros datos random al servidor para que nos agregue
                 // =========================================================
                 DataDTO registroDTO = new DataDTO();
                 registroDTO.setTipo("REGISTRO");

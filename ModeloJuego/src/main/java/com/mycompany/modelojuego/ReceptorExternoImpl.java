@@ -41,7 +41,7 @@ public class ReceptorExternoImpl implements IReceptorExterno {
 
             switch (protocolo) {
                 // ============================================================
-                // CASO 1: JUGADA LOCAL (Viene de tu ControllerView)
+                // CASO 1: JUGADA LOCAL (Viene de ControllerView)
                 // ============================================================
                 case INTENTO_JUGADA:
                     System.out.println("Receptor: Recibido INTENTO_JUGADA local.");
@@ -79,8 +79,7 @@ public class ReceptorExternoImpl implements IReceptorExterno {
                     System.err.println("SERVIDOR: Jugada Rechazada.");
                     break;
 
-                // Otros casos que no requieren acción inmediata
-                case REGISTRO: // El cliente envía REGISTRO, pero raramente lo recibe de vuelta
+                case REGISTRO: 
                 case SOLICITUD_LOGIN:
                 case INICIO_PARTIDA:
                 case SOLICITUD_ENVIO:
