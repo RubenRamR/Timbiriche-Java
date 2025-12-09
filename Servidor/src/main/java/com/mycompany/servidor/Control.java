@@ -36,34 +36,42 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
     public Blackboard getBlackboard() {
         return blackboard;
     }
+// =========================================================================
+    // ENTRADA (Implementación de IReceptor)
+    // =========================================================================
 
-    // =========================================================================
-    // ENTRADA
-    // =========================================================================
     @Override
     public void recibirMensaje(DataDTO datos) {
-        System.out.println("[Control] Recibido DTO: " + datos.getTipo());
-
-        // Registramos la sesión usando la IP real que viene en el DTO
-        if (!sesiones.containsKey(datos.getProyectoOrigen()))
+        // 1. Validación defensiva básica
+        if (datos == null)
         {
-
-            String ipReal = datos.getIpRemitente();
-
-            // Fallback de seguridad por si llega nulo
-            if (ipReal == null || ipReal.isEmpty())
-            {
-                ipReal = "127.0.0.1";
-            }
-
-            sesiones.put(datos.getProyectoOrigen(), ipReal);
-            System.out.println("[Control] Nueva sesión registrada: " + datos.getProyectoOrigen() + " -> IP: " + ipReal);
+            System.err.println("[Control] Error: Se recibió un DTO nulo.");
+            return;
         }
 
+        System.out.println("[Control] Recibido DTO Tipo: " + datos.getTipo());
+
+        String idProyecto = datos.getProyectoOrigen();
+        String ipRemitente = datos.getIpRemitente();
+
+        if (ipRemitente == null || ipRemitente.isEmpty())
+        {
+            ipRemitente = "127.0.0.1";
+        }
+
+        if (!sesiones.containsKey(idProyecto) || !sesiones.get(idProyecto).equals(ipRemitente))
+        {
+
+            sesiones.put(idProyecto, ipRemitente);
+            System.out.println("[Control] Sesión gestionada (Nueva/Actualizada): "
+                    + idProyecto + " -> IP: " + ipRemitente);
+        }
+
+        // Pasar al Blackboard
         Evento evento = convertirDTOaEvento(datos);
         blackboard.publicarEvento(evento);
     }
-    
+
     @Override
     public void procesarEvento(Evento evento) {
         if (evento.getTipo().equals("REGISTRO"))
