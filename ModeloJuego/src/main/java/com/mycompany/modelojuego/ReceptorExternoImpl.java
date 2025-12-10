@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.dominio.Jugador;
 import com.mycompany.dominio.Linea;
 import com.mycompany.dtos.DataDTO;
+import com.mycompany.imotorjuego.IMotorJuego;
 import com.mycompany.interfacesreceptor.IReceptorExterno;
 import com.mycompany.protocolo.Protocolo;
 import java.util.List;
@@ -20,81 +21,68 @@ import java.util.logging.Logger;
  * @author rramirez
  */
 public class ReceptorExternoImpl implements IReceptorExterno {
+// CORRECCIÓN 1: Usamos la Interfaz, no la clase concreta
 
-    private MotorJuego motorJuego;
+    private IMotorJuego motorJuego;
     private ObjectMapper jsonMapper;
 
-    public ReceptorExternoImpl(MotorJuego motorJuego) {
+    // Inyección de dependencia a través de la interfaz
+    public ReceptorExternoImpl(IMotorJuego motorJuego) {
         this.motorJuego = motorJuego;
         this.jsonMapper = new ObjectMapper();
     }
 
     @Override
     public void recibirMensaje(DataDTO datos) {
-        if (datos == null || datos.getTipo() == null) {
+        if (datos == null || datos.getTipo() == null)
+        {
             return;
         }
 
-        try {
-            // Convertimos el String del DTO al Enum Protocolo
+        try
+        {
             Protocolo protocolo = Protocolo.valueOf(datos.getTipo());
 
-            switch (protocolo) {
+            switch (protocolo)
+            {
                 // ============================================================
-                // CASO 1: JUGADA LOCAL (Viene de ControllerView)
-                // ============================================================
-                case INTENTO_JUGADA:
-                    System.out.println("Receptor: Recibido INTENTO_JUGADA local.");
-                    Linea lineaLocal = deserializarLinea(datos.getPayload());
-                    if (lineaLocal != null) {
-                        motorJuego.realizarJugadaLocal(lineaLocal);
-                    } else {
-                        System.err.println("Receptor: Error al deserializar línea local.");
-                    }
-                    break;
-
-                // ============================================================
-                // CASO 2: JUGADA REMOTA (Viene del Servidor)
+                // CASO: JUGADAS REMOTAS (DEL RIVAL)
                 // ============================================================
                 case ACTUALIZAR_TABLERO:
                     System.out.println("Receptor: Recibido ACTUALIZAR_TABLERO del servidor.");
-                    procesarJugadaRemota(datos, false);
+                    procesarJugadaRemota(datos);
                     break;
 
                 case CUADRO_CERRADO:
                     System.out.println("Receptor: Recibido CUADRO_CERRADO del servidor.");
-                    procesarJugadaRemota(datos, true);
+                    procesarJugadaRemota(datos);
                     break;
 
                 // ============================================================
-                // CASO 3: GESTIÓN DE SALA / LOBBY (NUEVO)
+                // CASO: GESTIÓN DE LOBBY
                 // ============================================================
                 case LISTA_JUGADORES:
                     System.out.println("Receptor: Recibida lista de jugadores actualizada.");
-                    // Le pasamos el JSON crudo al motor para que actualice su lista
                     motorJuego.actualizarListaDeJugadores(datos.getPayload());
                     break;
 
                 case JUGADA_INVALIDA:
-                    System.err.println("SERVIDOR: Jugada Rechazada.");
-                    break;
-
-                case REGISTRO: 
-                case SOLICITUD_LOGIN:
-                case INICIO_PARTIDA:
-                case SOLICITUD_ENVIO:
+                    System.err.println("SERVIDOR: La jugada fue rechazada.");
+                    // Aquí podrías llamar a un motorJuego.onError(...) si quisieras mostrarlo en la UI
                     break;
 
                 default:
-                    System.out.println("Receptor: Protocolo no manejado -> " + protocolo);
+                    // Ignoramos protocolos de handshake (LOGIN, REGISTRO, ETC) 
+                    // que quizas maneja otra clase o se ignoran una vez en juego.
                     break;
             }
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e)
+        {
             System.err.println("Receptor Error: Protocolo desconocido: " + datos.getTipo());
         }
     }
 
-    private void procesarJugadaRemota(DataDTO datos, boolean cerroCuadro) {
+    private void procesarJugadaRemota(DataDTO datos) {
         Linea linea = deserializarLinea(datos.getPayload());
 
         if (linea == null)
@@ -107,9 +95,10 @@ public class ReceptorExternoImpl implements IReceptorExterno {
 
         if (jugadorRemitente == null && nombreRemitente != null)
         {
-            jugadorRemitente = new Jugador(nombreRemitente, "#000000");
+            jugadorRemitente = new Jugador(nombreRemitente, "#999999");
         }
 
+        // Delegamos al Motor (a través de la interfaz IMotorJuego)
         motorJuego.realizarJugadaRemota(linea, jugadorRemitente);
     }
 
@@ -119,7 +108,7 @@ public class ReceptorExternoImpl implements IReceptorExterno {
             return jsonMapper.readValue(json, Linea.class);
         } catch (JsonProcessingException ex)
         {
-            Logger.getLogger(ReceptorExternoImpl.class.getName()).log(Level.SEVERE, "Error JSON", ex);
+            Logger.getLogger(ReceptorExternoImpl.class.getName()).log(Level.SEVERE, "Error JSON Linea", ex);
             return null;
         }
     }
@@ -129,7 +118,13 @@ public class ReceptorExternoImpl implements IReceptorExterno {
         {
             return null;
         }
+
         List<Jugador> jugadores = motorJuego.getJugadores();
+        if (jugadores == null)
+        {
+            return null;
+        }
+
         for (Jugador j : jugadores)
         {
             if (j.getNombre().equals(nombre))

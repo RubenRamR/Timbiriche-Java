@@ -105,7 +105,7 @@ public class MotorJuego implements IMotorJuego {
             System.out.println("MOTOR: Clic ignorado. No es tu turno. Es turno de: " + turnoActual.getNombre());
             return; 
         }
-// 1. Validar reglas locales
+        // 1. Validar reglas locales
         if (!validarJugada(linea))
         {
             return;

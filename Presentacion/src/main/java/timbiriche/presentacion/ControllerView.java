@@ -18,67 +18,34 @@ import java.util.Map;
  */
 public class ControllerView {
 
-    private IReceptorExterno receptorLogica;
-    private Jugador jugadorLocal;
-    private ObjectMapper jsonMapper;
+    private IModelViewModificable modeloModificable;
 
-    public ControllerView(IReceptorExterno receptorLogica, Jugador jugadorLocal) {
-        this.receptorLogica = receptorLogica;
-        this.jugadorLocal = jugadorLocal;
-        this.jsonMapper = new ObjectMapper();
+    /**
+     * Constructor.
+     *
+     * @param modeloModificable La interfaz del ModelView que permite acciones.
+     */
+    public ControllerView(IModelViewModificable modeloModificable) {
+        this.modeloModificable = modeloModificable;
     }
 
     /**
-     * Procesa el clic del usuario en el tablero. Serializa la jugada y la envía
-     * como un DTO al receptor externo.
+     * Procesa el clic del usuario en el tablero. Solo envía la intención de
+     * jugar. La validación lógica y la conversión a DTO/JSON ocurrirán más
+     * adelante (en el Motor y Dispatcher).
      *
-     * @param linea La línea calculada por la vista.
+     * @param linea La línea calculada por la vista visual.
      */
     public void onClicRealizarJugada(Linea linea) {
+        // 1. Validación básica de UI (no nulos)
         if (linea == null)
         {
             return;
         }
 
-        try
-        {
-            // 1. Crear DTO
-            DataDTO dto = new DataDTO(Protocolo.INTENTO_JUGADA);
-
-            // 2. Serializar Payload
-            String lineaJson = jsonMapper.writeValueAsString(linea);
-            dto.setPayload(lineaJson);
-
-            // 3. Asignar Origen (Vital para el servidor)
-            if (jugadorLocal != null)
-            {
-                dto.setProyectoOrigen(jugadorLocal.getNombre());
-            } else
-            {
-                dto.setProyectoOrigen("Anonimo");
-            }
-
-            // 4. Enviar
-            // Nota: Aunque el receptor suele ser para entrada, en esta arquitectura 
-            // el controlador lo usa para inyectar la jugada en el flujo del sistema.
-            receptorLogica.recibirMensaje(dto);
-
-        } catch (JsonProcessingException e)
-        {
-            System.err.println("ControllerView: Error al serializar jugada. " + e.getMessage());
-        }
-    }
-
-    /**
-     * Método del diagrama para procesar DTOs entrantes directamente si fuera
-     * necesario. Retorna true si se procesó correctamente.
-     */
-    public boolean actualizarDesdeDTO(DataDTO estado) {
-        if (estado == null)
-        {
-            return false;
-        }
-        receptorLogica.recibirMensaje(estado);
-        return true;
+        // 2. Delegación pura
+        // El Controller dice: "El usuario quiere poner esta línea".
+        // No le importa si se va por Red, si es Local o si es contra una IA.
+        modeloModificable.actualizarJugadaLocal(linea);
     }
 }

@@ -577,7 +577,7 @@ public class GameView extends javax.swing.JFrame implements Observer {
             };
 
             // --- 4. MOCK DEL CONTROLADOR ---
-            ControllerView mockController = new ControllerView(null, yo) {
+            ControllerView mockController = new ControllerView(null) {
                 @Override
                 public void onClicRealizarJugada(Linea linea) {
                     System.out.println("[TEST UI] Clic detectado: " + linea);

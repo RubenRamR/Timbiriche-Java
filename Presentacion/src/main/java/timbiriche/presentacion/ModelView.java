@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  *
  * @author rramirez
  */
-public class ModelView implements IModelViewLeible, IMotorJuegoListener {
+public class ModelView implements IModelViewLeible, IModelViewModificable, IMotorJuegoListener {
 
     private IMotorJuego motor;
     private List<Observer> observadores;
@@ -53,7 +53,7 @@ public class ModelView implements IModelViewLeible, IMotorJuegoListener {
     }
 
     // =========================================================
-    // IMPLEMENTACIÓN DE IMotorJuegoListener (Escucha a Lógica)
+    // IMPLEMENTACIÓN DE IMotorJuegoListener
     // =========================================================
     @Override
     public void onJuegoActualizado(Tablero tablero, Jugador turnoActual) {
@@ -81,16 +81,15 @@ public class ModelView implements IModelViewLeible, IMotorJuegoListener {
     }
 
     // =========================================================
-    // MÉTODOS DE ACCIÓN (Del Diagrama)
+    // MÉTODOS DE ACCIÓN
     // =========================================================
-    public boolean actualizarJugadaLocal(Linea linea) {
-        // Validación rápida antes de enviar al motor (opcional, el motor ya valida)
+    @Override
+    public void actualizarJugadaLocal(Linea linea) {
         if (linea == null)
         {
-            return false;
+            return;
         }
         motor.realizarJugadaLocal(linea);
-        return true;
     }
 
     public void notificarActualizacion(DataDTO estado) {
@@ -101,11 +100,12 @@ public class ModelView implements IModelViewLeible, IMotorJuegoListener {
 
     public void setTamano(Object tamano) {
         this.tamanoSeleccionado = tamano;
-        // Podría implicar reiniciar el tablero en el motor si el juego no ha empezado
     }
 
     // Método auxiliar privado para sincronizar al inicio
-    private void actualizarEstadoDesdeMotor() {
+    @Override
+    public void actualizarEstadoDesdeMotor() {
+        // Lógica de sincronización (igual a la que tenías)
         if (motor.getTablero() != null)
         {
             this.lineasDibujadas = motor.getTablero().lineasDibujadas;
@@ -113,6 +113,8 @@ public class ModelView implements IModelViewLeible, IMotorJuegoListener {
         }
         this.turnoActual = motor.getTurnoActual();
         this.jugadores = motor.getJugadores();
+
+        notificarObservadores();
     }
 
     // =========================================================
