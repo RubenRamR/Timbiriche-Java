@@ -37,15 +37,11 @@ public class ControllerView {
      * @param linea La línea calculada por la vista visual.
      */
     public void onClicRealizarJugada(Linea linea) {
-        // 1. Validación básica de UI (no nulos)
         if (linea == null)
         {
             return;
         }
 
-        // 2. Delegación pura
-        // El Controller dice: "El usuario quiere poner esta línea".
-        // No le importa si se va por Red, si es Local o si es contra una IA.
         modeloModificable.actualizarJugadaLocal(linea);
     }
 }

@@ -13,7 +13,7 @@ import java.io.Serializable;
 public class DataDTO implements Serializable {
 
     private String tipo;
-    private String payload;
+    private Object payload; // <--- El cambio clave
     private String proyectoOrigen;
     private String proyectoDestino;
 
@@ -45,12 +45,8 @@ public class DataDTO implements Serializable {
         this.tipo = tipo;
     }
 
-    public String getPayload() {
+    public Object getPayload() {
         return payload;
-    }
-
-    public void setPayload(String payload) {
-        this.payload = payload;
     }
 
     public String getProyectoOrigen() {
@@ -79,7 +75,10 @@ public class DataDTO implements Serializable {
     public void setIpRemitente(String ipRemitente) {
         this.ipRemitente = ipRemitente;
     }
-    // ==========================================
+
+    public void setPayload(Object payload) {
+        this.payload = payload;
+    }
 
     @Override
     public String toString() {

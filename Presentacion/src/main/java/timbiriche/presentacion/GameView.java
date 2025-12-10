@@ -55,7 +55,7 @@ public class GameView extends javax.swing.JFrame implements Observer {
 
         // 1. Configuración de Ventana
         actualizarTitulo();
-        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+//        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
 
         // 2. Observer

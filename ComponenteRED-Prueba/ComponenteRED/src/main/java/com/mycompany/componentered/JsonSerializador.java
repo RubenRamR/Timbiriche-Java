@@ -6,6 +6,8 @@ package com.mycompany.componentered;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import java.io.IOException;
 
 /**
@@ -18,7 +20,13 @@ public class JsonSerializador implements ISerializador {
 
     public JsonSerializador() {
         this.mapper = new ObjectMapper();
+
+        // Configuración básica
         this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        // ELIMINADO: activateDefaultTyping (PolymorphicTypeValidator)
+        // Ya NO queremos que agregue "@class": "com.mycompany..."
+        // Queremos JSON puro: {"x": 10, "y": 20}
     }
 
     @Override
@@ -28,7 +36,7 @@ public class JsonSerializador implements ISerializador {
             return mapper.writeValueAsString(obj);
         } catch (JsonProcessingException e)
         {
-            throw new RuntimeException("Error crítico serializando JSON: " + e.getMessage(), e);
+            throw new RuntimeException("Error serializando JSON", e);
         }
     }
 
@@ -36,13 +44,20 @@ public class JsonSerializador implements ISerializador {
     public Object deserializar(String json, Class<?> clase) {
         try
         {
-            Object resultado = mapper.readValue(json, clase);
-            return resultado;
-        } catch (Throwable e)
+            return mapper.readValue(json, clase);
+        } catch (Exception e)
         {
-            System.err.println("[ERROR-JACKSON] Falló Jackson: " + e.getClass().getName() + " -> " + e.getMessage());
-            e.printStackTrace(); // ¡Muestra el stacktrace!
-            throw new RuntimeException("Error deserializando", e);
+            e.printStackTrace();
+            return null;
         }
+    }
+
+    /**
+     * NUEVO MÉTODO ÚTIL: Convierte un Mapa genérico a un Objeto concreto. El
+     * Servidor nos devolverá un Mapa, y el Cliente necesitará convertirlo a
+     * Linea.
+     */
+    public <T> T convertirDesdeMapa(Object mapa, Class<T> claseDestino) {
+        return mapper.convertValue(mapa, claseDestino);
     }
 }

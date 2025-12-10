@@ -4,6 +4,7 @@
  */
 package com.mycompany.dominio;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.Map;
  *
  * @author rramirez
  */
-public class Tablero {
+public class Tablero implements Serializable{
 
     public int dimension;
     public List<Linea> lineasDibujadas;

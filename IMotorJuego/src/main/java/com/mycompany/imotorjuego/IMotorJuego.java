@@ -43,7 +43,7 @@ public interface IMotorJuego {
     /**
      * Recibe la lista actualizada de jugadores desde el servidor.
      */
-    void actualizarListaDeJugadores(String jsonArray);
+    void actualizarListaDeJugadores(List<Jugador> nuevosJugadores);
 
     // ==========================================
     // CONFIGURACIÓN E INICIALIZACIÓN

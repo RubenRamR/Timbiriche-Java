@@ -16,6 +16,8 @@ import java.util.List;
 import javax.swing.SwingUtilities;
 import timbiriche.presentacion.ControllerView;
 import timbiriche.presentacion.GameView;
+import timbiriche.presentacion.IModelViewLeible;
+import timbiriche.presentacion.IModelViewModificable;
 import timbiriche.presentacion.ModelView;
 
 /**
@@ -55,9 +57,10 @@ public class ClienteRojo {
                 motor.addDispatcher(dispatcher);
 
                 // 4. GUI
-                ModelView modelView = new ModelView(motor);
-                ControllerView controller = new ControllerView(receptor, rojo);
-                GameView view = new GameView(controller, modelView);
+                IModelViewModificable modelViewModificable = new ModelView(motor);
+                IModelViewLeible modelViewLeible = new ModelView(motor);
+                ControllerView controller = new ControllerView(modelViewModificable);
+                GameView view = new GameView(controller, modelViewLeible);
                 
                 view.setLocation(600, 0); // Mover ventana
                 view.setTitle("Cliente 2: ROJO (9001)");

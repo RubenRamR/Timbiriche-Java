@@ -21,12 +21,12 @@ public class Experto implements IFuenteConocimiento {
 
     private final Object identificador;
     private Blackboard blackboard;
-    private final ObjectMapper mapper;
+    // CAMBIO 1: Eliminamos el ObjectMapper. El experto no toca JSON.
 
     public Experto(Object identificador, Blackboard bb) {
         this.identificador = identificador;
         this.blackboard = bb;
-        this.mapper = new ObjectMapper();
+        // Eliminado: this.mapper = new ObjectMapper();
     }
 
     @Override
@@ -38,57 +38,73 @@ public class Experto implements IFuenteConocimiento {
     public void procesarEvento(Evento evento) {
         if (evento.getTipo().equals(Protocolo.INTENTO_JUGADA.name()))
         {
-            // Pasamos también el origen (quién hizo la jugada) para devolverlo en la respuesta
+
             String quienJugo = (String) evento.getOrigen();
             System.out.println("[Experto] Procesando jugada recibida de: " + quienJugo);
 
-            ejecutarLogica((String) evento.getDato(), quienJugo);
+            // CAMBIO 2: No hacemos cast a String. Tomamos el Objeto tal cual llega.
+            Object datoOpaco = evento.getDato();
+
+            ejecutarLogica(datoOpaco, quienJugo);
         }
     }
 
-    // Modificamos para recibir quién hizo la jugada
-    private void ejecutarLogica(String payloadJson, String quienJugo) {
-        // 1. VALIDACIONES (Simplificadas para la prueba)
-        if (!validarEstado(payloadJson))
+    // CAMBIO 3: Recibimos Object, no String
+    private void ejecutarLogica(Object payloadObjeto, String quienJugo) {
+
+        // 1. VALIDACIONES
+        // Comparamos objetos, no textos
+        if (!validarEstado(payloadObjeto))
         {
             System.out.println("[Experto] Jugada inválida (ya existe en historial).");
             return;
         }
 
-        // 2. GUARDAR EN HISTORIA (Persistence/Log)
+        // 2. GUARDAR EN HISTORIA
         Evento hecho = new Evento(
                 Protocolo.ACTUALIZAR_TABLERO.name(),
-                payloadJson,
-                quienJugo // Guardamos quién la hizo
+                payloadObjeto, // Guardamos el objeto vivo (Linea, etc.)
+                quienJugo
         );
         blackboard.agregarEvento(hecho);
 
         // 3. GENERAR RESPUESTA PARA EL CLIENTE
-        // Preparamos el DTO de vuelta
         DataDTO respuesta = new DataDTO(Protocolo.ACTUALIZAR_TABLERO);
-        respuesta.setPayload(payloadJson); // Devolvemos la línea para que la pinten
-        respuesta.setProyectoOrigen(quienJugo); // Decimos quién la pintó (para el color)
 
-        System.out.println("[Experto] Jugada válida. Enviando ACTUALIZAR_TABLERO a la red.");
+        // CAMBIO 4: Devolvemos el Objeto. 
+        // La capa de red del servidor (JsonSerializador) lo convertirá a JSON al salir.
+        respuesta.setPayload(payloadObjeto);
+        respuesta.setProyectoOrigen(quienJugo);
+
+        System.out.println("[Experto] Jugada válida. Reenviando Objeto a la red.");
         generarEventoSalida(respuesta);
     }
 
-    private boolean validarEstado(String datos) {
-        // Evitar líneas duplicadas
+    // CAMBIO 5: Validación por igualdad de Objetos
+    private boolean validarEstado(Object datosNuevos) {
         List<Evento> historia = blackboard.obtenerEventos();
+
         for (Evento e : historia)
         {
-            if (e.getTipo().equals(Protocolo.ACTUALIZAR_TABLERO.name())
-                    && e.getDato().equals(datos))
+            // Solo comparamos contra eventos del mismo tipo (ACTUALIZAR_TABLERO)
+            if (e.getTipo().equals(Protocolo.ACTUALIZAR_TABLERO.name()))
             {
-                return false;
+                Object datosAntiguos = e.getDato();
+
+                // USAMOS EQUALS:
+                // Esto requiere que la clase 'Linea' en el cliente tenga implementado 
+                // el método equals(). Si no, Java comparará referencias de memoria y 
+                // esto podría fallar (dejar pasar duplicados).
+                if (datosAntiguos != null && datosAntiguos.equals(datosNuevos))
+                {
+                    return false; // Ya existe, es inválido
+                }
             }
         }
         return true;
     }
 
     private void generarEventoSalida(DataDTO dtoRespuesta) {
-        // Creamos el evento que el Dispatcher del servidor escuchará para enviar por Socket
         Evento solicitud = new Evento(
                 EventosSistema.SOLICITUD_ENVIO,
                 dtoRespuesta,

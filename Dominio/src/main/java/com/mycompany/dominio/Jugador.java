@@ -12,12 +12,13 @@ import java.util.Objects;
  *
  * @author rramirez
  */
-public class Jugador {
+public class Jugador implements Serializable{
 
     public String nombre;
     public String rutaAvatar;
     public String color;
     public int puntaje;
+    private int puertoEscucha;
 
     public Jugador() {
         this.puntaje = 0;
@@ -44,6 +45,22 @@ public class Jugador {
 
     public String getColor() {
         return color;
+    }
+
+    public String getRutaAvatar() {
+        return rutaAvatar;
+    }
+
+    public void setRutaAvatar(String rutaAvatar) {
+        this.rutaAvatar = rutaAvatar;
+    }
+
+    public int getPuertoEscucha() {
+        return puertoEscucha;
+    }
+
+    public void setPuertoEscucha(int puertoEscucha) {
+        this.puertoEscucha = puertoEscucha;
     }
 
     @Override
