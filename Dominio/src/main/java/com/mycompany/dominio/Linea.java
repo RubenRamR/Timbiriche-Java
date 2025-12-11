@@ -11,7 +11,7 @@ import java.util.Objects;
  *
  * @author rramirez
  */
-public class Linea implements Serializable{
+public class Linea implements Serializable {
 
     public Punto p1;
     public Punto p2;

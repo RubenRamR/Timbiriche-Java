@@ -14,7 +14,7 @@ import java.util.Map;
  *
  * @author rramirez
  */
-public class Tablero implements Serializable{
+public class Tablero implements Serializable {
 
     public int dimension;
     public List<Linea> lineasDibujadas;
@@ -58,7 +58,6 @@ public class Tablero implements Serializable{
         return true;
     }
 
-    // Método auxiliar no explícito en diagrama pero necesario para agregarLinea
     public boolean existeLinea(Linea l) {
         for (Linea existente : lineasDibujadas)
         {
@@ -88,7 +87,7 @@ public class Tablero implements Serializable{
     }
 
     public Object getEstado() {
-        return this; // Retorna el objeto completo o un DTO si se requiriera
+        return this;
     }
 
     public Map<Jugador, Integer> calcularPuntajes() {
@@ -107,4 +106,26 @@ public class Tablero implements Serializable{
     public List<Cuadro> getCuadros() {
         return cuadros;
     }
+
+    public int getDimension() {
+        return dimension;
+    }
+
+    public void setDimension(int dimension) {
+        this.dimension = dimension;
+    }
+
+    public List<Linea> getLineasDibujadas() {
+        return lineasDibujadas;
+    }
+
+    public void setLineasDibujadas(List<Linea> lineasDibujadas) {
+        this.lineasDibujadas = lineasDibujadas;
+    }
+
+    @Override
+    public String toString() {
+        return "Tablero{" + "dimension=" + dimension + ", lineasDibujadas=" + lineasDibujadas + ", cuadros=" + cuadros + '}';
+    }
+
 }

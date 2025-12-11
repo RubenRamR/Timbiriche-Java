@@ -25,12 +25,12 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
     private Map<String, ClienteRemoto> sesiones = new HashMap<>();
 
     // Lista genérica. El servidor NO sabe qué es un Jugador, solo guarda datos.
-    private final List<Object> listaJugadores;
+    private final List<Object> lista;
 
     public Control() {
         this.blackboard = new Blackboard();
         this.sesiones = new HashMap<>();
-        this.listaJugadores = new ArrayList<>();
+        this.lista = new ArrayList<>();
         this.blackboard.suscribir(this);
     }
 
@@ -38,12 +38,8 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
         this.dispatcher = dispatcher;
     }
 
-    public Blackboard getBlackboard() {
-        return blackboard;
-    }
-
     // =========================================================================
-    // ENTRADA (DESACOPLADA)
+    // ENTRADA
     // =========================================================================
     @Override
     public void recibirMensaje(DataDTO datos) {
@@ -104,9 +100,6 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
         blackboard.publicarEvento(evento);
     }
 
-    // =========================================================================
-    // PROCESAR EVENTOS
-    // =========================================================================
     @Override
     public void procesarEvento(Evento evento) {
 
@@ -116,15 +109,15 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
 
             // Java sabe comparar Maps por contenido. 
             // Si llega el mismo JSON, generará un Map igual, así que contains funciona.
-            if (!listaJugadores.contains(nuevoJugador))
+            if (!lista.contains(nuevoJugador))
             {
-                listaJugadores.add(nuevoJugador);
-                System.out.println("[Control] Jugador agregado. Total: " + listaJugadores.size());
+                lista.add(nuevoJugador);
+                System.out.println("[Control] Jugador agregado. Total: " + lista.size());
 
                 DataDTO syncDTO = new DataDTO();
                 syncDTO.setTipo("LISTA_JUGADORES");
                 // Reenviamos la lista de Maps tal cual llegaron
-                syncDTO.setPayload(new ArrayList<>(listaJugadores));
+                syncDTO.setPayload(new ArrayList<>(lista));
 
                 broadcastReal(syncDTO);
             } else
@@ -180,12 +173,16 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
         return new Evento(dto.getTipo(), dto.getPayload(), dto.getProyectoOrigen());
     }
 
+    public Blackboard getBlackboard() {
+        return blackboard;
+    }
+
     @Override
     public void setBlackboard(Blackboard bb) {
     }
 
     // CLASE AUXILIAR PRIVADA
-    class ClienteRemoto {
+    private class ClienteRemoto {
 
         String ip;
         int puerto;

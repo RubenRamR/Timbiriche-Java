@@ -15,10 +15,7 @@ import com.mycompany.interfacesdispatcher.IDispatcher;
  * @author rramirez
  */
 public interface IMotorJuego {
-
-    // ==========================================
-    // INTERACCIÓN DESDE LA UI (JUGADOR LOCAL)
-    // ==========================================
+    
     /**
      * El jugador local intenta hacer una jugada.
      *

@@ -28,7 +28,6 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
     private IMotorJuego motor;
     private List<Observer> observadores;
 
-    // Estado Caché para la Vista
     private List<Linea> lineasDibujadas;
     private List<Jugador> jugadores;
     private List<Cuadro> cuadrosRellenos;
@@ -80,9 +79,6 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
         // Aquí podríamos disparar un observer especial para mostrar dialogs
     }
 
-    // =========================================================
-    // MÉTODOS DE ACCIÓN
-    // =========================================================
     @Override
     public void actualizarJugadaLocal(Linea linea) {
         if (linea == null)
@@ -92,17 +88,6 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
         motor.realizarJugadaLocal(linea);
     }
 
-    public void notificarActualizacion(DataDTO estado) {
-        // Método legacy del diagrama, útil si recibimos DTO directo
-        System.out.println("ModelView recibiendo actualización manual DTO.");
-        notificarObservadores();
-    }
-
-    public void setTamano(Object tamano) {
-        this.tamanoSeleccionado = tamano;
-    }
-
-    // Método auxiliar privado para sincronizar al inicio
     @Override
     public void actualizarEstadoDesdeMotor() {
         // Lógica de sincronización (igual a la que tenías)
@@ -117,8 +102,18 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
         notificarObservadores();
     }
 
+    public void notificarActualizacion(DataDTO estado) {
+        // Método legacy del diagrama, útil si recibimos DTO directo
+        System.out.println("ModelView recibiendo actualización manual DTO.");
+        notificarObservadores();
+    }
+
+    public void setTamano(Object tamano) {
+        this.tamanoSeleccionado = tamano;
+    }
+
     // =========================================================
-    // IMPLEMENTACIÓN DE IModelViewLeible (Getters para UI)
+    // IMPLEMENTACIÓN DE IModelViewLeible
     // =========================================================
     @Override
     public List<Linea> getLineasDibujadas() {
@@ -142,7 +137,6 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
 
     @Override
     public List<Cuadro> getCuadrosRellenos() {
-        // Filtramos solo los completados para la vista
         List<Cuadro> completados = new ArrayList<>();
         if (cuadrosRellenos != null)
         {
@@ -157,7 +151,6 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
         return completados;
     }
 
-    // Métodos para convertir datos de Dominio a Visuales (Colores/Avatares)
     @Override
     public String getAvatarJugador(Jugador jugador) {
         return (jugador != null && jugador.rutaAvatar != null) ? jugador.rutaAvatar : "default.png";

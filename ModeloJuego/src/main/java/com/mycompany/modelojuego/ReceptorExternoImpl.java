@@ -74,9 +74,6 @@ public class ReceptorExternoImpl implements IReceptorExterno {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // LÓGICA DE PROCESAMIENTO DE JUGADA (Map -> Linea)
-    // -------------------------------------------------------------------------
     private void procesarJugadaRemota(DataDTO datos) {
         Object payload = datos.getPayload();
         Linea linea = null;
@@ -107,9 +104,6 @@ public class ReceptorExternoImpl implements IReceptorExterno {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // LÓGICA DE PROCESAMIENTO DE LISTA (List<Map> -> List<Jugador>)
-    // -------------------------------------------------------------------------
     private void procesarListaJugadores(Object payload) {
         List<Jugador> listaLimpia = new ArrayList<>();
 
@@ -137,7 +131,7 @@ public class ReceptorExternoImpl implements IReceptorExterno {
     }
 
     // -------------------------------------------------------------------------
-    // CONVERTIDORES MANUALES (MAPPERS)
+    // MAPPERS
     // -------------------------------------------------------------------------
     private Linea convertirMapaALinea(Map<String, Object> mapa) {
         try
@@ -182,7 +176,7 @@ public class ReceptorExternoImpl implements IReceptorExterno {
         {
             return ((Number) obj).intValue();
         }
-        return 0; // O lanzar excepción
+        return 0;
     }
 
     private Jugador buscarJugadorPorNombre(String nombre) {
