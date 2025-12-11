@@ -4,7 +4,6 @@
  */
 package com.mycompany.servidor.implementacion;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mycompany.dtos.DataDTO;
 import com.mycompany.protocolo.Protocolo;
 import com.mycompany.servidor.Blackboard;
@@ -21,12 +20,10 @@ public class Experto implements IFuenteConocimiento {
 
     private final Object identificador;
     private Blackboard blackboard;
-    // CAMBIO 1: Eliminamos el ObjectMapper. El experto no toca JSON.
 
     public Experto(Object identificador, Blackboard bb) {
         this.identificador = identificador;
         this.blackboard = bb;
-        // Eliminado: this.mapper = new ObjectMapper();
     }
 
     @Override
@@ -42,18 +39,16 @@ public class Experto implements IFuenteConocimiento {
             String quienJugo = (String) evento.getOrigen();
             System.out.println("[Experto] Procesando jugada recibida de: " + quienJugo);
 
-            // CAMBIO 2: No hacemos cast a String. Tomamos el Objeto tal cual llega.
             Object datoOpaco = evento.getDato();
 
             ejecutarLogica(datoOpaco, quienJugo);
         }
     }
 
-    // CAMBIO 3: Recibimos Object, no String
     private void ejecutarLogica(Object payloadObjeto, String quienJugo) {
 
         // 1. VALIDACIONES
-        // Comparamos objetos, no textos
+        // Comparamos objetos
         if (!validarEstado(payloadObjeto))
         {
             System.out.println("[Experto] Jugada inválida (ya existe en historial).");
@@ -63,7 +58,7 @@ public class Experto implements IFuenteConocimiento {
         // 2. GUARDAR EN HISTORIA
         Evento hecho = new Evento(
                 Protocolo.ACTUALIZAR_TABLERO.name(),
-                payloadObjeto, // Guardamos el objeto vivo (Linea, etc.)
+                payloadObjeto,
                 quienJugo
         );
         blackboard.agregarEvento(hecho);
@@ -72,7 +67,6 @@ public class Experto implements IFuenteConocimiento {
         DataDTO respuesta = new DataDTO(Protocolo.ACTUALIZAR_TABLERO);
 
         // CAMBIO 4: Devolvemos el Objeto. 
-        // La capa de red del servidor (JsonSerializador) lo convertirá a JSON al salir.
         respuesta.setPayload(payloadObjeto);
         respuesta.setProyectoOrigen(quienJugo);
 

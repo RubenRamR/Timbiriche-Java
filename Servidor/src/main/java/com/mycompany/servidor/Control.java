@@ -57,21 +57,18 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
             ipRemitente = "127.0.0.1";
         }
 
-        // --- LÓGICA 3.3 CORREGIDA: Sin dependencia de Jugador ---
         if (datos.getTipo().equals("REGISTRO"))
         {
             try
             {
                 Object payload = datos.getPayload();
                 int puertoDelJugador = 0;
-                String nombreJugador = datos.getProyectoOrigen(); // Usamos el ID del DTO
+                String nombreJugador = datos.getProyectoOrigen();
 
                 // INTROSPECCIÓN DINÁMICA:
-                // Si el servidor no conoce la clase Jugador, Jackson lo convierte en un Map.
                 if (payload instanceof Map)
                 {
                     Map<?, ?> mapaDatos = (Map<?, ?>) payload;
-                    // Extraemos el puerto buscando la llave "puertoEscucha"
                     if (mapaDatos.containsKey("puertoEscucha"))
                     {
                         Object val = mapaDatos.get("puertoEscucha");
@@ -182,14 +179,5 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
     }
 
     // CLASE AUXILIAR PRIVADA
-    private class ClienteRemoto {
-
-        String ip;
-        int puerto;
-
-        public ClienteRemoto(String ip, int puerto) {
-            this.ip = ip;
-            this.puerto = puerto;
-        }
-    }
+    private record ClienteRemoto(String ip, int puerto) {}
 }

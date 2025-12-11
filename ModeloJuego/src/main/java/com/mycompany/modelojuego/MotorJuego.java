@@ -161,17 +161,14 @@ public class MotorJuego implements IMotorJuego {
                 if (jugadorRemitente != null)
                 {
                     jugadorRemitente.sumarPuntos(cuadrosCerrados);
-                    // El turno NO cambia (this.turnoActual sigue siendo jugadorRemitente)
                 }
             } else
             {
-                // --- REGLA TIMBIRICHE: No cierra cuadro -> CAMBIA turno ---
                 avanzarTurno();
             }
+            notificarCambios();
 
             verificarFinDeJuego();
-            // 4. Actualizar a todos los observadores (UI)
-            notificarCambios();
         }
     }
 
