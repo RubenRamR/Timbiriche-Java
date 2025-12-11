@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.SwingUtilities;
 import timbiriche.presentacion.ControllerView;
-import timbiriche.presentacion.GameView;
+import timbiriche.presentacion.Vistas.GameView;
 import timbiriche.presentacion.IModelViewLeible;
 import timbiriche.presentacion.IModelViewModificable;
 import timbiriche.presentacion.ModelView;

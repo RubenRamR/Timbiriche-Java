@@ -27,7 +27,7 @@ import java.util.Random;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import timbiriche.presentacion.ControllerView;
-import timbiriche.presentacion.GameView;
+import timbiriche.presentacion.Vistas.GameView;
 import timbiriche.presentacion.IModelViewLeible;
 import timbiriche.presentacion.IModelViewModificable;
 import timbiriche.presentacion.ModelView;
@@ -62,12 +62,7 @@ public class TimbiricheApp {
                 
                 Jugador yo = new Jugador(nombre, hexColor);
                 
-                // =========================================================
-                // ¡¡IMPORTANTE!!: AVISAR AL JUGADOR EN QUÉ PUERTO ESCUCHA
-                // =========================================================
-                // Si no pones esto, el servidor no sabrá a dónde responder
                 yo.setPuertoEscucha(puertoCliente); 
-                // =========================================================
                 
                 System.out.println("=== CLIENTE: " + nombre + " ===");
                 System.out.println("=== ESCUCHANDO EN PUERTO: " + puertoCliente + " ===");

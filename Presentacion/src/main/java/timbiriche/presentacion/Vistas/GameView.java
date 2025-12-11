@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package timbiriche.presentacion;
+package timbiriche.presentacion.Vistas;
 
 import com.mycompany.dominio.Cuadro;
 import com.mycompany.dominio.Jugador;
@@ -25,6 +25,9 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import timbiriche.presentacion.ControllerView;
+import timbiriche.presentacion.IModelViewLeible;
+import timbiriche.presentacion.Observer;
 
 /**
  *
