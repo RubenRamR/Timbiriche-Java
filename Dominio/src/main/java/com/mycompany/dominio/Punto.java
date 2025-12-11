@@ -11,7 +11,7 @@ import java.util.Objects;
  *
  * @author rramirez
  */
-public class Punto {
+public class Punto implements Serializable{
 
     private int x;
     private int y;

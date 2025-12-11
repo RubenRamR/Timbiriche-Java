@@ -31,4 +31,10 @@ public class EnvioPacket {
     public int getPuerto() {
         return puertoDestino;
     }
+
+    @Override
+    public String toString() {
+        return "EnvioPacket{" + "jsonString=" + jsonString + ", ipDestino=" + ipDestino + ", puertoDestino=" + puertoDestino + '}';
+    }
+    
 }

@@ -13,11 +13,10 @@ import java.io.Serializable;
 public class DataDTO implements Serializable {
 
     private String tipo;
-    private String payload;
+    private Object payload;
     private String proyectoOrigen;
     private String proyectoDestino;
 
-    // --- NUEVO CAMPO PARA RED ---
     private String ipRemitente;
     // ----------------------------
 
@@ -45,12 +44,8 @@ public class DataDTO implements Serializable {
         this.tipo = tipo;
     }
 
-    public String getPayload() {
+    public Object getPayload() {
         return payload;
-    }
-
-    public void setPayload(String payload) {
-        this.payload = payload;
     }
 
     public String getProyectoOrigen() {
@@ -69,9 +64,6 @@ public class DataDTO implements Serializable {
         this.proyectoDestino = proyectoDestino;
     }
 
-    // ==========================================
-    // GETTERS Y SETTERS DE LA IP (NUEVOS)
-    // ==========================================
     public String getIpRemitente() {
         return ipRemitente;
     }
@@ -79,11 +71,13 @@ public class DataDTO implements Serializable {
     public void setIpRemitente(String ipRemitente) {
         this.ipRemitente = ipRemitente;
     }
-    // ==========================================
+
+    public void setPayload(Object payload) {
+        this.payload = payload;
+    }
 
     @Override
     public String toString() {
-        // Actualicé el toString para que te ayude a depurar la IP en los logs
         return "DTO[" + tipo + "] De: " + proyectoOrigen + " (" + (ipRemitente != null ? ipRemitente : "N/A") + ")";
     }
 }

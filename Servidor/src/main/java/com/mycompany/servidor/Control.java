@@ -7,7 +7,9 @@ package com.mycompany.servidor;
 import com.mycompany.dtos.DataDTO;
 import com.mycompany.interfacesdispatcher.IDispatcher;
 import com.mycompany.interfacesreceptor.IReceptorExterno;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,14 +20,17 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
 
     private IDispatcher dispatcher;
     private final Blackboard blackboard;
-    // Mapa: Clave = NombreJugador, Valor = IP Real (Ej. "192.168.1.5")
-    private final Map<String, String> sesiones;
-    private final java.util.List<String> listaJugadoresJson;
+
+    // Mapa: ID del Proyecto -> ClienteRemoto (IP + Puerto)
+    private Map<String, ClienteRemoto> sesiones = new HashMap<>();
+
+    // Lista genérica. El servidor NO sabe qué es un Jugador, solo guarda datos.
+    private final List<Object> lista;
 
     public Control() {
         this.blackboard = new Blackboard();
         this.sesiones = new HashMap<>();
-        this.listaJugadoresJson = new java.util.ArrayList<>();
+        this.lista = new ArrayList<>();
         this.blackboard.suscribir(this);
     }
 
@@ -33,61 +38,93 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
         this.dispatcher = dispatcher;
     }
 
-    public Blackboard getBlackboard() {
-        return blackboard;
-    }
-
     // =========================================================================
     // ENTRADA
     // =========================================================================
     @Override
     public void recibirMensaje(DataDTO datos) {
-        System.out.println("[Control] Recibido DTO: " + datos.getTipo());
-
-        // Registramos la sesión usando la IP real que viene en el DTO
-        if (!sesiones.containsKey(datos.getProyectoOrigen()))
+        if (datos == null)
         {
-
-            String ipReal = datos.getIpRemitente();
-
-            // Fallback de seguridad por si llega nulo
-            if (ipReal == null || ipReal.isEmpty())
-            {
-                ipReal = "127.0.0.1";
-            }
-
-            sesiones.put(datos.getProyectoOrigen(), ipReal);
-            System.out.println("[Control] Nueva sesión registrada: " + datos.getProyectoOrigen() + " -> IP: " + ipReal);
+            System.err.println("[Control] Error: DTO nulo.");
+            return;
         }
+
+        System.out.println("[Control] Recibido DTO Tipo: " + datos.getTipo());
+
+        String ipRemitente = datos.getIpRemitente();
+        if (ipRemitente == null || ipRemitente.isEmpty())
+        {
+            ipRemitente = "127.0.0.1";
+        }
+
+        if (datos.getTipo().equals("REGISTRO"))
+        {
+            try
+            {
+                Object payload = datos.getPayload();
+                int puertoDelJugador = 0;
+                String nombreJugador = datos.getProyectoOrigen();
+
+                // INTROSPECCIÓN DINÁMICA:
+                if (payload instanceof Map)
+                {
+                    Map<?, ?> mapaDatos = (Map<?, ?>) payload;
+                    if (mapaDatos.containsKey("puertoEscucha"))
+                    {
+                        Object val = mapaDatos.get("puertoEscucha");
+                        puertoDelJugador = (Integer) val;
+                    }
+                }
+
+                if (puertoDelJugador > 0)
+                {
+                    sesiones.put(
+                            nombreJugador,
+                            new ClienteRemoto(ipRemitente, puertoDelJugador)
+                    );
+                    System.out.println("[Control] Sesión guardada (Dinámica): " + nombreJugador
+                            + " -> " + ipRemitente + ":" + puertoDelJugador);
+                }
+
+            } catch (Exception e)
+            {
+                System.err.println("[Control] Error extrayendo puerto del payload genérico: " + e.getMessage());
+            }
+        }
+        // -----------------------------------------------------------
 
         Evento evento = convertirDTOaEvento(datos);
         blackboard.publicarEvento(evento);
     }
-    
+
     @Override
     public void procesarEvento(Evento evento) {
+
         if (evento.getTipo().equals("REGISTRO"))
         {
-            String jsonJugador = evento.getDato().toString();
+            Object nuevoJugador = evento.getDato();
 
-            // Evitar duplicados simples
-            if (!listaJugadoresJson.contains(jsonJugador))
+            // Java sabe comparar Maps por contenido. 
+            // Si llega el mismo JSON, generará un Map igual, así que contains funciona.
+            if (!lista.contains(nuevoJugador))
             {
-                listaJugadoresJson.add(jsonJugador);
-                System.out.println("[Control] Jugador registrado. Total: " + listaJugadoresJson.size());
+                lista.add(nuevoJugador);
+                System.out.println("[Control] Jugador agregado. Total: " + lista.size());
 
                 DataDTO syncDTO = new DataDTO();
                 syncDTO.setTipo("LISTA_JUGADORES");
-                syncDTO.setPayload(listaJugadoresJson.toString());
+                // Reenviamos la lista de Maps tal cual llegaron
+                syncDTO.setPayload(new ArrayList<>(lista));
 
                 broadcastReal(syncDTO);
+            } else
+            {
+                System.out.println("[Control] Jugador ya existe, omitiendo.");
             }
+
         } else if (evento.getTipo().equals(EventosSistema.SOLICITUD_ENVIO))
         {
-
-            System.out.println("[Control] Solicitud de envío detectada: Envío");
             System.out.println("[Control] Ejecutando envío a la red.");
-
             if (evento.getDato() instanceof DataDTO)
             {
                 if (dispatcher != null)
@@ -95,17 +132,14 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
                     broadcastReal((DataDTO) evento.getDato());
                 } else
                 {
-                    System.err.println("[Control-ERROR] ¡El dispatcher es NULL! No puedo enviar.");
+                    System.err.println("[Control-ERROR] Dispatcher es NULL.");
                 }
-            } else
-            {
-                System.err.println("[Control-ERROR] El dato no es un DataDTO.");
             }
         }
     }
 
     // =========================================================================
-    // BROADCAST (LÓGICA DE ENVÍO)
+    // BROADCAST (USANDO SESIONES GUARDADAS)
     // =========================================================================
     private void broadcastReal(DataDTO dto) {
         if (dispatcher == null)
@@ -113,45 +147,37 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
             return;
         }
 
-        // -----------------------------------------------------------------
-        // BLOQUE A: SIMULACIÓN LOCAL
-        // Descomenta esto SOLO si quieres probar 3 ventanas en UNA sola PC.
-        // -----------------------------------------------------------------
-        /*
-        // System.out.println("[Control] Enviando Broadcast Simulado (9000, 9001, 9002)...");
-        // dispatcher.enviar(dto, "127.0.0.1", 9000); // Azul
-        // dispatcher.enviar(dto, "127.0.0.1", 9001); // Rojo
-        // dispatcher.enviar(dto, "127.0.0.1", 9002); // Morado
-        // return; // Cortamos aquí para no ejecutar el bloque B
-         */
-        // -----------------------------------------------------------------
-        // BLOQUE B: PRODUCCIÓN LAN
-        // Usa las IPs reales guardadas y envía al puerto estándar 9000.
-        // -----------------------------------------------------------------
-        for (String ipDestino : sesiones.values())
+        for (ClienteRemoto cliente : sesiones.values())
         {
-
-            // Validación mínima
-            if (ipDestino == null || ipDestino.isEmpty())
+            try
             {
-                continue;
+                if (cliente == null || cliente.ip == null)
+                {
+                    continue;
+                }
+
+                System.out.println("[Control] Enviando a remoto: " + cliente.ip + ":" + cliente.puerto);
+                dispatcher.enviar(dto, cliente.ip, cliente.puerto);
+
+            } catch (Exception e)
+            {
+                System.err.println("[Control] Error enviando a " + cliente.ip);
             }
-
-            System.out.println("[Control] Enviando a remoto: " + ipDestino);
-
-            dispatcher.enviar(dto, ipDestino, 9000);
         }
     }
 
     private Evento convertirDTOaEvento(DataDTO dto) {
-        return new Evento(
-                dto.getTipo(),
-                dto.getPayload(),
-                dto.getProyectoOrigen()
-        );
+        return new Evento(dto.getTipo(), dto.getPayload(), dto.getProyectoOrigen());
+    }
+
+    public Blackboard getBlackboard() {
+        return blackboard;
     }
 
     @Override
     public void setBlackboard(Blackboard bb) {
     }
+
+    // CLASE AUXILIAR PRIVADA
+    private record ClienteRemoto(String ip, int puerto) {}
 }

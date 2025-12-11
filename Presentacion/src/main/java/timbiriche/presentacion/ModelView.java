@@ -23,12 +23,11 @@ import java.util.stream.Collectors;
  *
  * @author rramirez
  */
-public class ModelView implements IModelViewLeible, IMotorJuegoListener {
+public class ModelView implements IModelViewLeible, IModelViewModificable, IMotorJuegoListener {
 
     private IMotorJuego motor;
     private List<Observer> observadores;
 
-    // Estado Caché para la Vista
     private List<Linea> lineasDibujadas;
     private List<Jugador> jugadores;
     private List<Cuadro> cuadrosRellenos;
@@ -53,7 +52,7 @@ public class ModelView implements IModelViewLeible, IMotorJuegoListener {
     }
 
     // =========================================================
-    // IMPLEMENTACIÓN DE IMotorJuegoListener (Escucha a Lógica)
+    // IMPLEMENTACIÓN DE IMotorJuegoListener
     // =========================================================
     @Override
     public void onJuegoActualizado(Tablero tablero, Jugador turnoActual) {
@@ -80,17 +79,27 @@ public class ModelView implements IModelViewLeible, IMotorJuegoListener {
         // Aquí podríamos disparar un observer especial para mostrar dialogs
     }
 
-    // =========================================================
-    // MÉTODOS DE ACCIÓN (Del Diagrama)
-    // =========================================================
-    public boolean actualizarJugadaLocal(Linea linea) {
-        // Validación rápida antes de enviar al motor (opcional, el motor ya valida)
+    @Override
+    public void actualizarJugadaLocal(Linea linea) {
         if (linea == null)
         {
-            return false;
+            return;
         }
         motor.realizarJugadaLocal(linea);
-        return true;
+    }
+
+    @Override
+    public void actualizarEstadoDesdeMotor() {
+        // Lógica de sincronización (igual a la que tenías)
+        if (motor.getTablero() != null)
+        {
+            this.lineasDibujadas = motor.getTablero().lineasDibujadas;
+            this.cuadrosRellenos = motor.getTablero().cuadros;
+        }
+        this.turnoActual = motor.getTurnoActual();
+        this.jugadores = motor.getJugadores();
+
+        notificarObservadores();
     }
 
     public void notificarActualizacion(DataDTO estado) {
@@ -101,22 +110,10 @@ public class ModelView implements IModelViewLeible, IMotorJuegoListener {
 
     public void setTamano(Object tamano) {
         this.tamanoSeleccionado = tamano;
-        // Podría implicar reiniciar el tablero en el motor si el juego no ha empezado
-    }
-
-    // Método auxiliar privado para sincronizar al inicio
-    private void actualizarEstadoDesdeMotor() {
-        if (motor.getTablero() != null)
-        {
-            this.lineasDibujadas = motor.getTablero().lineasDibujadas;
-            this.cuadrosRellenos = motor.getTablero().cuadros;
-        }
-        this.turnoActual = motor.getTurnoActual();
-        this.jugadores = motor.getJugadores();
     }
 
     // =========================================================
-    // IMPLEMENTACIÓN DE IModelViewLeible (Getters para UI)
+    // IMPLEMENTACIÓN DE IModelViewLeible
     // =========================================================
     @Override
     public List<Linea> getLineasDibujadas() {
@@ -140,7 +137,6 @@ public class ModelView implements IModelViewLeible, IMotorJuegoListener {
 
     @Override
     public List<Cuadro> getCuadrosRellenos() {
-        // Filtramos solo los completados para la vista
         List<Cuadro> completados = new ArrayList<>();
         if (cuadrosRellenos != null)
         {
@@ -155,7 +151,6 @@ public class ModelView implements IModelViewLeible, IMotorJuegoListener {
         return completados;
     }
 
-    // Métodos para convertir datos de Dominio a Visuales (Colores/Avatares)
     @Override
     public String getAvatarJugador(Jugador jugador) {
         return (jugador != null && jugador.rutaAvatar != null) ? jugador.rutaAvatar : "default.png";

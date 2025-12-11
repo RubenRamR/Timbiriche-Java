@@ -4,13 +4,14 @@
  */
 package com.mycompany.dominio;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  *
  * @author rramirez
  */
-public class Linea {
+public class Linea implements Serializable {
 
     public Punto p1;
     public Punto p2;

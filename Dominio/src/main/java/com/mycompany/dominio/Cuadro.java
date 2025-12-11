@@ -12,9 +12,9 @@ import java.util.List;
  *
  * @author rramirez
  */
-public class Cuadro {
+public class Cuadro implements Serializable{
 
-    private List<Linea> lineas; // Debe contener exactamente 4 líneas
+    private List<Linea> lineas;
     public Jugador propietario;
     public boolean completado;
 

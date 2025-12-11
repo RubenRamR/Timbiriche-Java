@@ -29,7 +29,6 @@ public class MotorJuego implements IMotorJuego {
 
     private List<IMotorJuegoListener> listeners;
     private List<IDispatcher> dispatchers;
-    private ObjectMapper jsonMapper;
 
     /**
      * Constructor. Inicializa el tablero y las listas.
@@ -39,7 +38,7 @@ public class MotorJuego implements IMotorJuego {
         this.listeners = new ArrayList<>();
         this.dispatchers = new ArrayList<>();
         this.listaJugadores = new ArrayList<>();
-        this.jsonMapper = new ObjectMapper();
+//        this.jsonMapper = new ObjectMapper();
     }
 
     // ==========================================
@@ -103,9 +102,8 @@ public class MotorJuego implements IMotorJuego {
         if (!turnoActual.getNombre().equals(jugadorLocal.getNombre()))
         {
             System.out.println("MOTOR: Clic ignorado. No es tu turno. Es turno de: " + turnoActual.getNombre());
-            return; 
+            return;
         }
-// 1. Validar reglas locales
         if (!validarJugada(linea))
         {
             return;
@@ -113,10 +111,8 @@ public class MotorJuego implements IMotorJuego {
 
         try
         {
-            String jsonLinea = jsonMapper.writeValueAsString(linea);
-
             DataDTO dto = new DataDTO(Protocolo.INTENTO_JUGADA);
-            dto.setPayload(jsonLinea);
+            dto.setPayload(linea);
 
             // Asignar origen
             if (jugadorLocal != null)
@@ -165,17 +161,14 @@ public class MotorJuego implements IMotorJuego {
                 if (jugadorRemitente != null)
                 {
                     jugadorRemitente.sumarPuntos(cuadrosCerrados);
-                    // El turno NO cambia (this.turnoActual sigue siendo jugadorRemitente)
                 }
             } else
             {
-                // --- REGLA TIMBIRICHE: No cierra cuadro -> CAMBIA turno ---
                 avanzarTurno();
             }
+            notificarCambios();
 
             verificarFinDeJuego();
-            // 4. Actualizar a todos los observadores (UI)
-            notificarCambios();
         }
     }
 
@@ -282,48 +275,28 @@ public class MotorJuego implements IMotorJuego {
             turnoActual = listaJugadores.get(siguienteIndex);
         }
     }
-/**
-     * Recibe el JSON Array de jugadores del servidor y actualiza la lista local.
-     */
-    public void actualizarListaDeJugadores(String jsonArray) {
-        if (jsonArray == null || jsonArray.isEmpty()) {
+
+    public void actualizarListaDeJugadores(List<Jugador> nuevosJugadores) {
+        if (nuevosJugadores == null || nuevosJugadores.isEmpty())
+        {
             return;
         }
 
-        try {
-            // CORRECCIÓN: Usamos 'jsonMapper' (Jackson) que ya tienes declarado en la clase
-            // en lugar de 'jsonSerializer'.
-            Jugador[] nuevosJugadores = jsonMapper.readValue(jsonArray, Jugador[].class);
+        this.listaJugadores.clear();
+        this.listaJugadores.addAll(nuevosJugadores);
 
-            if (nuevosJugadores != null) {
-                
-                // 2. ACTUALIZAR LISTA INTERNA
-                this.listaJugadores.clear();
-                
-                // Agregamos los nuevos usando Collections.addAll o un bucle
-                for (Jugador j : nuevosJugadores) {
-                    this.listaJugadores.add(j);
-                }
-                
-                System.out.println("MOTOR: Lista sincronizada. Jugadores conectados: " + listaJugadores.size());
+        System.out.println("MOTOR: Lista sincronizada. Jugadores: " + listaJugadores.size());
 
-                // 3. SINCRONIZAR TURNO INICIAL
-                if (!listaJugadores.isEmpty()) {
-                    // Si el turno es nulo, o si el jugador del turno actual ya no está en la lista
-                    if (turnoActual == null || !listaJugadores.contains(turnoActual)) {
-                        turnoActual = listaJugadores.get(0);
-                        System.out.println("MOTOR: Turno inicial asignado a: " + turnoActual.getNombre());
-                    }
-                }
-
-                // 4. NOTIFICAR A LA VISTA
-                notificarCambios();
+        if (!listaJugadores.isEmpty())
+        {
+            if (turnoActual == null || !listaJugadores.contains(turnoActual))
+            {
+                turnoActual = listaJugadores.get(0);
             }
-        } catch (Exception e) {
-            System.err.println("MOTOR ERROR: Falló al procesar lista de jugadores: " + e.getMessage());
-            e.printStackTrace();
         }
+        notificarCambios();
     }
+
     private void notificarCambios() {
         for (IMotorJuegoListener l : listeners)
         {
