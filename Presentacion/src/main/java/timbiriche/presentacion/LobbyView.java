@@ -68,18 +68,20 @@ public class LobbyView extends JFrame implements Observer {
         add(pnlInferior, BorderLayout.SOUTH);
     }
 
-    // =========================================================================
-    // MÉTODO CLAVE: ACTUALIZACIÓN VISUAL
-    // =========================================================================
+// REEMPLAZAR EL MÉTODO actualizar() EN LobbyView:
     @Override
     public void actualizar() {
         System.out.println("[LobbyView] 🔄 actualizar() llamado");
         System.out.println("[LobbyView] Estado lobby: " + modelo.isEnLobby());
 
-        // Manejar el cierre de la ventana si la partida ya comenzó
+        // ✅ Manejar el cierre de la ventana si la partida ya comenzó
         if (!modelo.isEnLobby()) {
-            System.out.println("[LobbyView] 🚪 Cerrando lobby (partida iniciada)");
-            SwingUtilities.invokeLater(() -> this.dispose());
+            System.out.println("[LobbyView] 🚪 Partida iniciada - Cerrando lobby");
+            SwingUtilities.invokeLater(() -> {
+                this.setVisible(false); // Ocultar primero
+                this.dispose(); // Luego destruir
+                System.out.println("[LobbyView] ✅ Lobby cerrado correctamente");
+            });
             return;
         }
 

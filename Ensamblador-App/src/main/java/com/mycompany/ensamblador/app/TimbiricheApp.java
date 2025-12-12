@@ -106,28 +106,32 @@ public class TimbiricheApp {
                 System.out.println("=== ROL: " + (esHost ? "HOST" : "CLIENTE") + " ===");
                 System.out.println("=== SERVIDOR: " + ipServidor + ":8080 ===");
                 System.out.println("=== PUERTO LOCAL: " + puertoCliente + " ===");
+
                 // Crear Motor
-                MotorJuego motor = new MotorJuego();
+                motor = new MotorJuego();
                 motor.setJugadorLocal(jugadorLocal);
                 motor.setSoyHost(esHost);
 
                 // Crear ModelView
-                ModelView modelView = new ModelView(motor);
-                ControllerView controller = new ControllerView(modelView);
+                modelView = new ModelView(motor);
+                controller = new ControllerView(modelView);
 
-                // ✅ USAR ReceptorExternoImpl DIRECTAMENTE (ya existe en ModeloJuego)
+                // Receptor
                 IReceptorExterno receptor = new ReceptorExternoImpl(motor);
 
                 // Configurar Red
-                IDispatcher dispatcher = FabricaRED.configurarRed(puertoCliente, ipServidor, 8080);
-                FabricaRED.establecerReceptor(receptor);  // ← Conexión directa
+                dispatcher = FabricaRED.configurarRed(puertoCliente, ipServidor, 8080);
+                FabricaRED.establecerReceptor(receptor);
                 motor.addDispatcher(dispatcher);
 
-                // Mostrar Lobby
-                LobbyView lobbyView = new LobbyView(controller, modelView);
+                // ✅ CREAR AMBAS VISTAS PERO SOLO MOSTRAR LOBBY INICIALMENTE
+                lobbyView = new LobbyView(controller, modelView);
+                gameView = new GameView(controller, modelView);
+
+                // Ambas vistas son Observers del ModelView (según diagrama)
+                // GameView se mostrará automáticamente cuando detecte que salió del lobby
                 lobbyView.setVisible(true);
-                GameView gameView = new GameView(controller, modelView);
-                gameView.setVisible(false);
+                gameView.setVisible(false); // Oculta hasta que inicie la partida
 
                 // Enviar registro
                 DataDTO registroDTO = new DataDTO();

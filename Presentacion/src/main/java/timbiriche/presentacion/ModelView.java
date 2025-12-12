@@ -244,7 +244,9 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
             System.out.println("[ModelView]    └─> Notificando a: " + o.getClass().getSimpleName());
         }
 
+        // ✅ Solo notificar - Los Observers (LobbyView y GameView) manejarán su propia lógica
         notificarObservadores();
+
         System.out.println("[ModelView] ✅ Notificación completada");
     }
 
