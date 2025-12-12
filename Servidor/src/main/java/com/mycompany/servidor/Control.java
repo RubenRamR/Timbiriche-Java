@@ -113,24 +113,40 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
         String nombreVotante = (String) evento.getOrigen();
 
         // 1. Marcar al jugador como listo en la lista
+        boolean jugadorEncontrado = false;
         for (Map<String, Object> jugador : listaJugadores) {
             if (jugador.get("nombre").equals(nombreVotante)) {
                 jugador.put("listo", true);
-                System.out.println("[Control] Voto registrado: " + nombreVotante);
+                jugadorEncontrado = true;
+                System.out.println("[Control] ✅ Voto registrado: " + nombreVotante);
                 break;
             }
+        }
+
+        if (!jugadorEncontrado) {
+            System.err.println("[Control] ⚠️ Jugador votante no encontrado: " + nombreVotante);
+            return;
         }
 
         // 2. Contar cuántos están listos
         long listos = listaJugadores.stream().filter(j -> (boolean) j.get("listo")).count();
         int conectados = sesiones.size();
 
-        // 3. Notificar a todos el cambio de estado (para que vean el Check ✅)
+        System.out.println("[Control] 📊 Votos actuales: " + listos + "/" + conectados);
+
+        // 3. **CRÍTICO**: Notificar a todos el cambio de estado ANTES de revisar si inicia
         enviarListaActualizada();
 
         // 4. ¿Todos listos?
         if (listos >= conectados && conectados >= MIN_JUGADORES) {
             System.out.println("[Control] 🚀 ¡Todos listos! Iniciando partida " + DIMENSION_POR_DEFECTO + "x" + DIMENSION_POR_DEFECTO);
+
+            // Pequeño delay para que los clientes procesen la lista antes del inicio
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
 
             DataDTO inicio = new DataDTO();
             inicio.setTipo(Protocolo.INICIO_PARTIDA.name());
@@ -142,7 +158,7 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
 
             broadcastReal(inicio);
         } else {
-            System.out.println("[Control] Votos: " + listos + "/" + conectados + ". Esperando...");
+            System.out.println("[Control] ⏳ Esperando más votos...");
         }
     }
 

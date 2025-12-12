@@ -263,12 +263,21 @@ public class MotorJuego implements IMotorJuego {
 
         System.out.println("MOTOR: Lista sincronizada. Jugadores: " + listaJugadores.size());
 
+        // Mostrar estado detallado
+        for (Jugador j : listaJugadores) {
+            System.out.println("  - " + j.getNombre() + " | Listo: " + j.isListo());
+        }
+
         if (!listaJugadores.isEmpty()) {
             if (turnoActual == null || !listaJugadores.contains(turnoActual)) {
                 turnoActual = listaJugadores.get(0);
             }
         }
-        notificarCambios();
+
+        // **CRÍTICO**: Notificar a los listeners sobre la actualización
+        for (IMotorJuegoListener l : listeners) {
+            l.onListaJugadoresActualizada(listaJugadores);
+        }
     }
 
     private void notificarCambios() {
