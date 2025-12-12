@@ -35,4 +35,17 @@ public interface IModelViewLeible extends Subjet {
     int getDimension();
 
     boolean esJuegoTerminado();
+
+    // ============================================
+    // NUEVO: MÉTODOS PARA LOBBY
+    // ============================================
+    /**
+     * Indica si estamos en lobby o en partida
+     */
+    boolean isEnLobby();
+
+    /**
+     * Indica si el jugador local es el host
+     */
+    boolean esHost();
 }

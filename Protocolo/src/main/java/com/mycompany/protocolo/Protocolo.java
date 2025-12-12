@@ -23,9 +23,14 @@ public enum Protocolo {
      */
     LOGIN_RECHAZADO,
     /**
+     * Cliente (Host) -> Servidor: "Iniciar la partida ahora"
+     */
+    SOLICITUD_INICIO_PARTIDA,
+    /**
      * Servidor -> Todos: "Ya estamos todos, comienza el juego"
      */
     INICIO_PARTIDA,
+    INICIO_RECHAZADO,
     // --- 2. FLUJO DEL JUEGO (TIMBIRICHE) ---
     /**
      * Cliente -> Servidor: "Quiero poner una línea en estas coordenadas"

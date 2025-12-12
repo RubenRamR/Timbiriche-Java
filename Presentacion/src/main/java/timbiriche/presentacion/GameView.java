@@ -574,6 +574,16 @@ public class GameView extends javax.swing.JFrame implements Observer {
                 @Override
                 public void notificarObservadores() {
                 }
+
+                @Override
+                public boolean isEnLobby() {
+                    throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+                }
+
+                @Override
+                public boolean esHost() {
+                    throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+                }
             };
 
             // --- 4. MOCK DEL CONTROLADOR ---

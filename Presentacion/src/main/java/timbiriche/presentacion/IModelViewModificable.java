@@ -15,4 +15,14 @@ public interface IModelViewModificable {
     void actualizarJugadaLocal(Linea linea);
 
     void actualizarEstadoDesdeMotor();
+
+    // ============================================
+    // NUEVO: MÉTODO PARA LOBBY
+    // ============================================
+    /**
+     * Solicita al motor iniciar la partida
+     *
+     * @param dimension Tamaño del tablero
+     */
+    void solicitarInicioPartida(int dimension);
 }

@@ -81,8 +81,7 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
 
     @Override
     public void actualizarJugadaLocal(Linea linea) {
-        if (linea == null)
-        {
+        if (linea == null) {
             return;
         }
         motor.realizarJugadaLocal(linea);
@@ -91,8 +90,7 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
     @Override
     public void actualizarEstadoDesdeMotor() {
         // Lógica de sincronización (igual a la que tenías)
-        if (motor.getTablero() != null)
-        {
+        if (motor.getTablero() != null) {
             this.lineasDibujadas = motor.getTablero().lineasDibujadas;
             this.cuadrosRellenos = motor.getTablero().cuadros;
         }
@@ -138,12 +136,9 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
     @Override
     public List<Cuadro> getCuadrosRellenos() {
         List<Cuadro> completados = new ArrayList<>();
-        if (cuadrosRellenos != null)
-        {
-            for (Cuadro c : cuadrosRellenos)
-            {
-                if (c.isCompletado())
-                {
+        if (cuadrosRellenos != null) {
+            for (Cuadro c : cuadrosRellenos) {
+                if (c.isCompletado()) {
                     completados.add(c);
                 }
             }
@@ -158,15 +153,12 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
 
     @Override
     public Color getColorJugador(Jugador jugador) {
-        if (jugador == null || jugador.color == null)
-        {
+        if (jugador == null || jugador.color == null) {
             return Color.BLACK;
         }
-        try
-        {
+        try {
             return Color.decode(jugador.color); // Asume hex string "#RRGGBB"
-        } catch (NumberFormatException e)
-        {
+        } catch (NumberFormatException e) {
             return Color.BLACK;
         }
     }
@@ -176,16 +168,14 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
     // =========================================================
     @Override
     public void agregarObservador(Observer observador) {
-        if (!observadores.contains(observador))
-        {
+        if (!observadores.contains(observador)) {
             observadores.add(observador);
         }
     }
 
     @Override
     public void notificarObservadores() {
-        for (Observer o : observadores)
-        {
+        for (Observer o : observadores) {
             o.actualizar();
         }
     }
@@ -197,8 +187,7 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
 
     @Override
     public int getDimension() {
-        if (motor == null || motor.getTablero() == null)
-        {
+        if (motor == null || motor.getTablero() == null) {
             return 10;
         }
         return motor.getTablero().dimension;
@@ -207,5 +196,39 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
     @Override
     public boolean esJuegoTerminado() {
         return this.juegoTerminado;
+    }
+
+    @Override
+    public boolean isEnLobby() {
+        return motor.isEnLobby();
+    }
+
+    @Override
+    public boolean esHost() {
+        return motor.isSoyHost();
+    }
+
+    @Override
+    public void solicitarInicioPartida(int dimension) {
+        motor.solicitarInicioPartida(dimension);
+    }
+
+    @Override
+    public void onListaJugadoresActualizada(List<Jugador> jugadores) {
+        System.out.println("[ModelView] Lista actualizada: " + jugadores.size() + " jugadores");
+        this.jugadores = jugadores;
+        notificarObservadores(); // Actualiza LobbyView
+    }
+
+    @Override
+    public void onPartidaIniciada(int dimension) {
+        System.out.println("[ModelView] Partida iniciada. Dimensión: " + dimension);
+        notificarObservadores(); // LobbyView se cerrará, GameView se abrirá
+    }
+
+    @Override
+    public void onInicioRechazado(String motivo) {
+        System.err.println("[ModelView] Inicio rechazado: " + motivo);
+        notificarObservadores(); // LobbyView mostrará el error
     }
 }
