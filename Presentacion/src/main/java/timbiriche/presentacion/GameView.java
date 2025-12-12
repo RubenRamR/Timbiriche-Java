@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
+
 package timbiriche.presentacion;
 
 import com.mycompany.dominio.Cuadro;
@@ -25,6 +22,11 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.ImageIcon;
+import javax.swing.SwingConstants;
+import java.awt.GridLayout;
+import java.awt.Image;
+import java.net.URL;
 
 /**
  *
@@ -102,8 +104,7 @@ public class GameView extends javax.swing.JFrame implements Observer {
         // ---------------------------------------------------------
         // CASO A: JUEGO TERMINADO (MOSTRAR TABLA FINAL)
         // ---------------------------------------------------------
-        if (modeloLeible.esJuegoTerminado())
-        {
+        if (modeloLeible.esJuegoTerminado()) {
             JLabel lblFin = new JLabel("¡JUEGO TERMINADO!");
             lblFin.setFont(new Font("Arial", Font.BOLD, 24));
             lblFin.setForeground(Color.RED);
@@ -131,19 +132,16 @@ public class GameView extends javax.swing.JFrame implements Observer {
 
             // Filas
             int pos = 1;
-            for (Jugador j : ranking)
-            {
+            for (Jugador j : ranking) {
                 JPanel row = new JPanel(new BorderLayout());
                 row.setBackground(Color.WHITE);
                 row.setBorder(new EmptyBorder(10, 10, 10, 10));
 
                 JLabel lblPos = new JLabel(" " + pos + "º ");
                 lblPos.setFont(new Font("Arial", Font.BOLD, 22));
-                if (pos == 1)
-                {
+                if (pos == 1) {
                     lblPos.setForeground(new Color(218, 165, 32)); // Oro
-                } else
-                {
+                } else {
                     lblPos.setForeground(Color.DARK_GRAY);
                 }
 
@@ -172,8 +170,7 @@ public class GameView extends javax.swing.JFrame implements Observer {
         } // ---------------------------------------------------------
         // CASO B: JUEGO EN CURSO (MOSTRAR TURNO NORMAL)
         // ---------------------------------------------------------
-        else
-        {
+        else {
             JLabel lblTituloTurno = new JLabel("TURNO ACTUAL:");
             lblTituloTurno.setFont(new Font("Arial", Font.PLAIN, 16));
             lblTituloTurno.setAlignmentX(CENTER_ALIGNMENT);
@@ -184,8 +181,7 @@ public class GameView extends javax.swing.JFrame implements Observer {
             lblEstadoTurno.setAlignmentX(CENTER_ALIGNMENT);
 
             Jugador jugadorTurno = modeloLeible.getTurnoActual();
-            if (jugadorTurno != null)
-            {
+            if (jugadorTurno != null) {
                 lblEstadoTurno.setText(jugadorTurno.getNombre());
                 lblEstadoTurno.setForeground(decodificarColor(jugadorTurno.getColor()));
             }
@@ -196,10 +192,8 @@ public class GameView extends javax.swing.JFrame implements Observer {
             pnlMarcador.add(javax.swing.Box.createRigidArea(new Dimension(0, 40)));
             // Agregar lista de puntajes parciales...
             List<Jugador> jugadores = modeloLeible.getJugadores();
-            if (jugadores != null)
-            {
-                for (Jugador j : jugadores)
-                {
+            if (jugadores != null) {
+                for (Jugador j : jugadores) {
                     pnlMarcador.add(crearPanelJugador(j));
                     pnlMarcador.add(javax.swing.Box.createRigidArea(new Dimension(0, 10)));
                 }
@@ -212,40 +206,48 @@ public class GameView extends javax.swing.JFrame implements Observer {
 
     private JPanel crearPanelJugador(Jugador j) {
         JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout(15, 0));
-        panel.setBackground(Color.WHITE);
-        // Borde redondeado o simple
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-        panel.setMaximumSize(new Dimension(280, 80));
+        panel.setLayout(new BorderLayout());
+        panel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
 
-        // Avatar Placeholder
-        JPanel pnlAvatar = new JPanel();
-        pnlAvatar.setPreferredSize(new Dimension(50, 50));
-        pnlAvatar.setBackground(Color.decode("#EEEEEE"));
-        pnlAvatar.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        pnlAvatar.add(new JLabel("IMG"));
-        panel.add(pnlAvatar, BorderLayout.WEST);
+        // Panel izquierdo: imagen del avatar
+        JLabel lblImagen = new JLabel("IMG");
+        lblImagen.setHorizontalAlignment(SwingConstants.CENTER);
+        lblImagen.setVerticalAlignment(SwingConstants.CENTER);
+        lblImagen.setPreferredSize(new Dimension(60, 60));
 
-        // Info
-        JPanel pnlInfo = new JPanel();
-        pnlInfo.setLayout(new BoxLayout(pnlInfo, BoxLayout.Y_AXIS));
-        pnlInfo.setBackground(Color.WHITE);
+        // Cargar icono desde el ModelView
+        String rutaAvatar = modeloLeible.getAvatarJugador(j);
+        if (rutaAvatar != null) {
+            try {
+                java.net.URL url = getClass().getResource(rutaAvatar);
+                if (url != null) {
+                    ImageIcon original = new ImageIcon(url);
+                    ImageIcon escalado = new ImageIcon(
+                            original.getImage().getScaledInstance(48, 48, Image.SCALE_SMOOTH)
+                    );
+                    lblImagen.setIcon(escalado);
+                    lblImagen.setText(""); // quitamos el texto "IMG"
+                } else {
+                    System.err.println("No se encontró recurso avatar: " + rutaAvatar);
+                }
+            } catch (Exception ex) {
+                System.err.println("Error cargando avatar: " + ex.getMessage());
+            }
+        }
 
+        // Panel central: nombre y puntos
+        JPanel panelTexto = new JPanel();
+        panelTexto.setLayout(new GridLayout(2, 1));
         JLabel lblNombre = new JLabel(j.getNombre());
-        lblNombre.setFont(new Font("Arial", Font.BOLD, 16));
-        lblNombre.setForeground(decodificarColor(j.getColor())); // Color del jugador
-
         JLabel lblPuntos = new JLabel(j.getPuntaje() + " pts");
-        lblPuntos.setFont(new Font("Arial", Font.BOLD, 14));
-        lblPuntos.setForeground(Color.DARK_GRAY);
 
-        pnlInfo.add(lblNombre);
-        pnlInfo.add(lblPuntos);
+        lblNombre.setForeground(modeloLeible.getColorJugador(j));
+        panelTexto.add(lblNombre);
+        panelTexto.add(lblPuntos);
 
-        panel.add(pnlInfo, BorderLayout.CENTER);
+        panel.add(lblImagen, BorderLayout.WEST);
+        panel.add(panelTexto, BorderLayout.CENTER);
+
         return panel;
     }
 
@@ -258,10 +260,8 @@ public class GameView extends javax.swing.JFrame implements Observer {
 
         // Puntos
         g2.setColor(Color.BLACK);
-        for (int row = 0; row < m.dim; row++)
-        {
-            for (int col = 0; col < m.dim; col++)
-            {
+        for (int row = 0; row < m.dim; row++) {
+            for (int col = 0; col < m.dim; col++) {
                 int px = m.originX + (col * m.espacio);
                 int py = m.originY + (row * m.espacio);
                 g2.fillOval(px - RADIO_PUNTO / 2, py - RADIO_PUNTO / 2, RADIO_PUNTO, RADIO_PUNTO);
@@ -272,7 +272,7 @@ public class GameView extends javax.swing.JFrame implements Observer {
         List<Linea> lineas = modeloLeible.getLineasDibujadas();
         if (lineas != null) {
             g2.setStroke(new BasicStroke(GROSOR_LINEA));
-            
+
             for (Linea l : lineas) {
                 if (l.getPropietario() != null) {
                     g2.setColor(decodificarColor(l.getPropietario().getColor()));
@@ -290,32 +290,69 @@ public class GameView extends javax.swing.JFrame implements Observer {
         }
 
         // Cuadros
-        for (Cuadro c : modeloLeible.getCuadrosRellenos())
-        {
-            if (c.getPropietario() != null)
-            {
+        for (Cuadro c : modeloLeible.getCuadrosRellenos()) {
+            if (c.getPropietario() != null) {
                 Punto topLeft = getTopLeft(c.getLineas());
-                if (topLeft != null)
-                {
+                if (topLeft != null) {
+
                     int px = m.originX + (topLeft.getX() * m.espacio);
                     int py = m.originY + (topLeft.getY() * m.espacio);
 
                     Color colorJug = decodificarColor(c.getPropietario().getColor());
                     g2.setColor(colorJug);
+
                     int offsetRelleno = GROSOR_LINEA;
                     int tamRelleno = m.espacio - (GROSOR_LINEA * 2);
-                    g2.fillRect(px + offsetRelleno, py + offsetRelleno, tamRelleno, tamRelleno);
 
+                    int cuadroX = px + offsetRelleno;
+                    int cuadroY = py + offsetRelleno;
+                    g2.fillRect(cuadroX, cuadroY, tamRelleno, tamRelleno);
+
+                    // Borde blanco opcional
                     g2.setColor(Color.WHITE);
-                    g2.setFont(new Font("Arial", Font.BOLD, m.espacio / 2));
-                    String letra = c.getPropietario().getNombre().substring(0, 1).toUpperCase();
-                    int textW = g2.getFontMetrics().stringWidth(letra);
-                    int textH = g2.getFontMetrics().getAscent();
-                    g2.drawString(letra, px + (m.espacio / 2) - (textW / 2), py + (m.espacio / 2) + (textH / 4));
+                    g2.drawRect(cuadroX, cuadroY, tamRelleno, tamRelleno);
+
+                    // === Intentar dibujar el avatar en el centro del cuadro ===
+                    boolean avatarDibujado = false;
+                    try {
+                        Jugador propietario = c.getPropietario();
+                        String rutaAvatar = modeloLeible.getAvatarJugador(propietario);
+                        if (rutaAvatar != null && !rutaAvatar.isBlank()) {
+                            URL url = getClass().getResource(rutaAvatar);
+                            if (url != null) {
+                                ImageIcon icon = new ImageIcon(url);
+                                int size = (int) (tamRelleno * 0.6);
+                                Image img = icon.getImage().getScaledInstance(size, size, Image.SCALE_SMOOTH);
+
+                                int imgX = cuadroX + (tamRelleno - size) / 2;
+                                int imgY = cuadroY + (tamRelleno - size) / 2;
+
+                                g2.drawImage(img, imgX, imgY, null);
+                                avatarDibujado = true;
+                            } else {
+                                System.err.println("No se encontró recurso avatar en cuadro: " + rutaAvatar);
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error cargando avatar en cuadro: " + e.getMessage());
+                    }
+
+                    // Fallback: inicial del jugador si no hubo avatar
+                    if (!avatarDibujado) {
+                        g2.setColor(Color.WHITE);
+                        g2.setFont(new Font("Arial", Font.BOLD, m.espacio / 2));
+                        String letra = c.getPropietario().getNombre().substring(0, 1).toUpperCase();
+                        int textW = g2.getFontMetrics().stringWidth(letra);
+                        int textH = g2.getFontMetrics().getAscent();
+                        g2.drawString(letra,
+                                cuadroX + (tamRelleno / 2) - (textW / 2),
+                                cuadroY + (tamRelleno / 2) + (textH / 4));
+                    }
                 }
             }
         }
     }
+    
 
     private void manejarClic(int mouseX, int mouseY) {
         MetricasTablero m = calcularMetricas();
@@ -324,18 +361,14 @@ public class GameView extends javax.swing.JFrame implements Observer {
         double menorDistancia = Double.MAX_VALUE;
 
         // Horizontales
-        for (int row = 0; row < m.dim; row++)
-        {
-            for (int col = 0; col < m.dim - 1; col++)
-            {
+        for (int row = 0; row < m.dim; row++) {
+            for (int col = 0; col < m.dim - 1; col++) {
                 int x1 = m.originX + (col * m.espacio);
                 int y1 = m.originY + (row * m.espacio);
                 int x2 = x1 + m.espacio;
-                if (mouseX >= x1 && mouseX <= x2)
-                {
+                if (mouseX >= x1 && mouseX <= x2) {
                     double dist = Math.abs(mouseY - y1);
-                    if (dist <= tolerancia && dist < menorDistancia)
-                    {
+                    if (dist <= tolerancia && dist < menorDistancia) {
                         menorDistancia = dist;
                         mejorLinea = new Linea(new Punto(col, row), new Punto(col + 1, row));
                     }
@@ -343,26 +376,21 @@ public class GameView extends javax.swing.JFrame implements Observer {
             }
         }
         // Verticales
-        for (int col = 0; col < m.dim; col++)
-        {
-            for (int row = 0; row < m.dim - 1; row++)
-            {
+        for (int col = 0; col < m.dim; col++) {
+            for (int row = 0; row < m.dim - 1; row++) {
                 int x1 = m.originX + (col * m.espacio);
                 int y1 = m.originY + (row * m.espacio);
                 int y2 = y1 + m.espacio;
-                if (mouseY >= y1 && mouseY <= y2)
-                {
+                if (mouseY >= y1 && mouseY <= y2) {
                     double dist = Math.abs(mouseX - x1);
-                    if (dist <= tolerancia && dist < menorDistancia)
-                    {
+                    if (dist <= tolerancia && dist < menorDistancia) {
                         menorDistancia = dist;
                         mejorLinea = new Linea(new Punto(col, row), new Punto(col, row + 1));
                     }
                 }
             }
         }
-        if (mejorLinea != null)
-        {
+        if (mejorLinea != null) {
             controlador.onClicRealizarJugada(mejorLinea);
         }
     }
@@ -372,8 +400,7 @@ public class GameView extends javax.swing.JFrame implements Observer {
         int w = pnlLienzo.getWidth();
         int h = pnlLienzo.getHeight();
         int ladoTablero = Math.min(w, h) - 100;
-        if (ladoTablero < 100)
-        {
+        if (ladoTablero < 100) {
             ladoTablero = 100;
         }
         int espacio = ladoTablero / (dim - 1);
@@ -390,36 +417,30 @@ public class GameView extends javax.swing.JFrame implements Observer {
     private Punto getTopLeft(List<Linea> lineas) {
         int minX = Integer.MAX_VALUE;
         int minY = Integer.MAX_VALUE;
-        for (Linea l : lineas)
-        {
+        for (Linea l : lineas) {
             minX = Math.min(minX, Math.min(l.p1.getX(), l.p2.getX()));
             minY = Math.min(minY, Math.min(l.p1.getY(), l.p2.getY()));
         }
-        if (minX == Integer.MAX_VALUE)
-        {
+        if (minX == Integer.MAX_VALUE) {
             return null;
         }
         return new Punto(minX, minY);
     }
 
     private Color decodificarColor(String hex) {
-        try
-        {
+        try {
             return Color.decode(hex);
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             return Color.GRAY;
         }
     }
 
     private void actualizarTitulo() {
-        if (modeloLeible == null)
-        {
+        if (modeloLeible == null) {
             return;
         }
         StringBuilder sb = new StringBuilder("Timbiriche");
-        if (modeloLeible.getJugadorLocal() != null)
-        {
+        if (modeloLeible.getJugadorLocal() != null) {
             sb.append(" | Soy: ").append(modeloLeible.getJugadorLocal().getNombre());
         }
         setTitle(sb.toString());
@@ -427,9 +448,9 @@ public class GameView extends javax.swing.JFrame implements Observer {
 
     @Override
     public void actualizar() {
-        actualizarTitulo(); 
-        actualizarMarcador(); 
-        pnlLienzo.repaint(); 
+        actualizarTitulo();
+        actualizarMarcador();
+        pnlLienzo.repaint();
     }
 
     /**
@@ -477,24 +498,20 @@ public class GameView extends javax.swing.JFrame implements Observer {
      */
     public static void main(String args[]) {
         // 1. Configurar Look and Feel
-        try
-        {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels())
-            {
-                if ("Nimbus".equals(info.getName()))
-                {
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
             }
-        } catch (Exception ex)
-        {
+        } catch (Exception ex) {
             java.util.logging.Logger.getLogger(GameView.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
 
         // 2. Ejecutar la ventana
-        java.awt.EventQueue.invokeLater(() ->
-        {
+        java.awt.EventQueue.invokeLater(()
+                -> {
 
             // --- DATOS DUMMY ---
             Jugador yo = new Jugador("Tester_UI", "#0000FF"); // Azul
@@ -544,13 +561,10 @@ public class GameView extends javax.swing.JFrame implements Observer {
                 @Override
                 public Color getColorJugador(Jugador jugador) {
                     // Lógica simple para convertir el String hex del jugador a Color real
-                    if (jugador != null && jugador.getColor() != null)
-                    {
-                        try
-                        {
+                    if (jugador != null && jugador.getColor() != null) {
+                        try {
                             return Color.decode(jugador.getColor());
-                        } catch (NumberFormatException e)
-                        {
+                        } catch (NumberFormatException e) {
                             return Color.BLACK; // Fallback si el hex está mal
                         }
                     }
@@ -588,7 +602,7 @@ public class GameView extends javax.swing.JFrame implements Observer {
             new GameView(mockController, mockModelo).setVisible(true);
         });
     }
- 
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel PnlFondo;

@@ -81,8 +81,7 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
 
     @Override
     public void actualizarJugadaLocal(Linea linea) {
-        if (linea == null)
-        {
+        if (linea == null) {
             return;
         }
         motor.realizarJugadaLocal(linea);
@@ -91,8 +90,7 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
     @Override
     public void actualizarEstadoDesdeMotor() {
         // Lógica de sincronización (igual a la que tenías)
-        if (motor.getTablero() != null)
-        {
+        if (motor.getTablero() != null) {
             this.lineasDibujadas = motor.getTablero().lineasDibujadas;
             this.cuadrosRellenos = motor.getTablero().cuadros;
         }
@@ -138,12 +136,9 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
     @Override
     public List<Cuadro> getCuadrosRellenos() {
         List<Cuadro> completados = new ArrayList<>();
-        if (cuadrosRellenos != null)
-        {
-            for (Cuadro c : cuadrosRellenos)
-            {
-                if (c.isCompletado())
-                {
+        if (cuadrosRellenos != null) {
+            for (Cuadro c : cuadrosRellenos) {
+                if (c.isCompletado()) {
                     completados.add(c);
                 }
             }
@@ -153,20 +148,24 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
 
     @Override
     public String getAvatarJugador(Jugador jugador) {
-        return (jugador != null && jugador.rutaAvatar != null) ? jugador.rutaAvatar : "default.png";
+        if (jugador == null) {
+            return null;
+        }
+        String ruta = jugador.getRutaAvatar();
+        if (ruta == null || ruta.isEmpty()) {
+            return "Presentacion/avatars/avatar1.png"; // default para no dejarlo vacío
+        }
+        return ruta;
     }
 
     @Override
     public Color getColorJugador(Jugador jugador) {
-        if (jugador == null || jugador.color == null)
-        {
+        if (jugador == null || jugador.color == null) {
             return Color.BLACK;
         }
-        try
-        {
+        try {
             return Color.decode(jugador.color); // Asume hex string "#RRGGBB"
-        } catch (NumberFormatException e)
-        {
+        } catch (NumberFormatException e) {
             return Color.BLACK;
         }
     }
@@ -176,16 +175,14 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
     // =========================================================
     @Override
     public void agregarObservador(Observer observador) {
-        if (!observadores.contains(observador))
-        {
+        if (!observadores.contains(observador)) {
             observadores.add(observador);
         }
     }
 
     @Override
     public void notificarObservadores() {
-        for (Observer o : observadores)
-        {
+        for (Observer o : observadores) {
             o.actualizar();
         }
     }
@@ -197,8 +194,7 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
 
     @Override
     public int getDimension() {
-        if (motor == null || motor.getTablero() == null)
-        {
+        if (motor == null || motor.getTablero() == null) {
             return 10;
         }
         return motor.getTablero().dimension;

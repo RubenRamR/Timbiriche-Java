@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.modelojuego;
 
 import com.mycompany.dominio.Jugador;
@@ -15,10 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- *
- * @author rramirez
- */
 public class ReceptorExternoImpl implements IReceptorExterno {
 
     private IMotorJuego motorJuego;
@@ -40,9 +32,6 @@ public class ReceptorExternoImpl implements IReceptorExterno {
 
             switch (protocolo)
             {
-                // ============================================================
-                // CASO: JUGADAS
-                // ============================================================
                 case ACTUALIZAR_TABLERO:
                     System.out.println("Receptor: Recibido ACTUALIZAR_TABLERO.");
                     procesarJugadaRemota(datos);
@@ -53,9 +42,6 @@ public class ReceptorExternoImpl implements IReceptorExterno {
                     procesarJugadaRemota(datos);
                     break;
 
-                // ============================================================
-                // CASO: LISTA DE JUGADORES
-                // ============================================================
                 case LISTA_JUGADORES:
                     System.out.println("Receptor: Recibida lista de jugadores.");
                     procesarListaJugadores(datos.getPayload());
@@ -78,11 +64,10 @@ public class ReceptorExternoImpl implements IReceptorExterno {
         Object payload = datos.getPayload();
         Linea linea = null;
 
-        // Opción A: Ya es un objeto Linea (Local o si usaras ObjectStream)
         if (payload instanceof Linea)
         {
             linea = (Linea) payload;
-        } // Opción B: Es un MAPA (Viene del Servidor JSON desacoplado)
+        }
         else if (payload instanceof Map)
         {
             linea = convertirMapaALinea((Map<String, Object>) payload);
@@ -96,7 +81,6 @@ public class ReceptorExternoImpl implements IReceptorExterno {
 
             if (jugadorR == null)
             {
-                // Jugador temporal si no existe en la lista local
                 jugadorR = new Jugador(nombreRemitente != null ? nombreRemitente : "Desconocido", "#808080");
             }
 
@@ -115,32 +99,28 @@ public class ReceptorExternoImpl implements IReceptorExterno {
             {
                 if (item instanceof Map)
                 {
-                    // Convertir cada Mapa a Jugador manualmente
                     Jugador j = convertirMapaAJugador((Map<String, Object>) item);
                     if (j != null)
                     {
                         listaLimpia.add(j);
                     }
-                } else if (item instanceof Jugador)
+                }
+                else if (item instanceof Jugador)
                 {
                     listaLimpia.add((Jugador) item);
                 }
             }
+
             motorJuego.actualizarListaDeJugadores(listaLimpia);
         }
     }
 
-    // -------------------------------------------------------------------------
-    // MAPPERS
-    // -------------------------------------------------------------------------
     private Linea convertirMapaALinea(Map<String, Object> mapa) {
         try
         {
-            // Extraer sub-mapas de los puntos
             Map<String, Object> p1Map = (Map<String, Object>) mapa.get("p1");
             Map<String, Object> p2Map = (Map<String, Object>) mapa.get("p2");
 
-            // Usar helper getInt para evitar errores de cast (Long vs Integer)
             int x1 = getInt(p1Map.get("x"));
             int y1 = getInt(p1Map.get("y"));
             int x2 = getInt(p2Map.get("x"));
@@ -159,18 +139,39 @@ public class ReceptorExternoImpl implements IReceptorExterno {
         {
             String nombre = (String) mapa.get("nombre");
             String color = (String) mapa.get("color");
-            // Agrega más campos si tu Jugador tiene más (avatar, puntos, etc.)
-            return new Jugador(nombre, color);
+            String rutaAvatar = (String) mapa.get("rutaAvatar");
+
+            Jugador j = new Jugador(nombre, color);
+
+            if (rutaAvatar != null)
+            {
+                j.setRutaAvatar(rutaAvatar);
+            }
+
+            Object puntajeObj = mapa.get("puntaje");
+            if (puntajeObj instanceof Number)
+            {
+                int puntos = ((Number) puntajeObj).intValue();
+                if (puntos > 0)
+                {
+                    j.sumarPuntos(puntos);
+                }
+            }
+
+            Object puertoEscuchaObj = mapa.get("puertoEscucha");
+            if (puertoEscuchaObj instanceof Number)
+            {
+                j.setPuertoEscucha(((Number) puertoEscuchaObj).intValue());
+            }
+
+            return j;
         } catch (Exception e)
         {
+            System.err.println("Receptor: Error convirtiendo Mapa a Jugador -> " + e.getMessage());
             return null;
         }
     }
 
-    /**
-     * Helper vital: Convierte cualquier Number (Integer, Long, Double) a int.
-     * Jackson a veces devuelve Long para números pequeños, esto lo soluciona.
-     */
     private int getInt(Object obj) {
         if (obj instanceof Number)
         {
