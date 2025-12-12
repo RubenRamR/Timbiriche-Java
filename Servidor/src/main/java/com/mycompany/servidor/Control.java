@@ -25,16 +25,17 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
     // Mapa: ID del Proyecto -> ClienteRemoto (IP + Puerto)
     private Map<String, ClienteRemoto> sesiones = new HashMap<>();
 
-    // Lista genérica. El servidor NO sabe qué es un Jugador, solo guarda datos.
-    private final List<Object> lista;
+    // Lista de Jugadores (Cada uno es un Map<String, Object> para ser flexible)
+    private final List<Map<String, Object>> listaJugadores;
 
-    // Constante para el mínimo de jugadores
+    // Constantes
     private static final int MIN_JUGADORES = 2;
+    private static final int DIMENSION_POR_DEFECTO = 3;
 
     public Control() {
         this.blackboard = new Blackboard();
         this.sesiones = new HashMap<>();
-        this.lista = new ArrayList<>();
+        this.listaJugadores = new ArrayList<>();
         this.blackboard.suscribir(this);
     }
 
@@ -42,161 +43,122 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
         this.dispatcher = dispatcher;
     }
 
-    // =========================================================================
-    // ENTRADA (Receptor de Red)
-    // =========================================================================
     @Override
     public void recibirMensaje(DataDTO datos) {
         if (datos == null) {
-            System.err.println("[Control] Error: DTO nulo.");
             return;
         }
 
-        System.out.println("[Control] Recibido DTO Tipo: " + datos.getTipo());
+        System.out.println("[Control] Recibido: " + datos.getTipo());
 
-        String ipRemitente = datos.getIpRemitente();
-        if (ipRemitente == null || ipRemitente.isEmpty()) {
-            ipRemitente = "127.0.0.1";
-        }
+        String ipRemitente = datos.getIpRemitente() != null ? datos.getIpRemitente() : "127.0.0.1";
 
-        // Usamos el enum para REGISTRO
         if (datos.getTipo().equals(Protocolo.REGISTRO.name())) {
-            try {
-                Object payload = datos.getPayload();
-                int puertoDelJugador = 0;
-                String nombreJugador = datos.getProyectoOrigen();
-
-                if (payload instanceof Map) {
-                    Map<?, ?> mapaDatos = (Map<?, ?>) payload;
-                    if (mapaDatos.containsKey("puertoEscucha")) {
-                        Object val = mapaDatos.get("puertoEscucha");
-                        puertoDelJugador = ((Number) val).intValue();
-                    }
-                }
-
-                if (puertoDelJugador > 0) {
-                    sesiones.put(
-                            nombreJugador,
-                            new ClienteRemoto(ipRemitente, puertoDelJugador)
-                    );
-                    System.out.println("[Control] Sesión guardada (Dinámica): " + nombreJugador
-                            + " -> " + ipRemitente + ":" + puertoDelJugador);
-                }
-
-            } catch (Exception e) {
-                System.err.println("[Control] Error extrayendo puerto del payload genérico: " + e.getMessage());
-            }
+            manejarRegistroFisico(datos, ipRemitente);
         }
-        // -----------------------------------------------------------
 
         Evento evento = convertirDTOaEvento(datos);
         blackboard.publicarEvento(evento);
     }
 
-    // =========================================================================
-    // PROCESADOR DE EVENTOS (IFuenteConocimiento)
-    // =========================================================================
+    private void manejarRegistroFisico(DataDTO datos, String ip) {
+        try {
+            if (datos.getPayload() instanceof Map) {
+                Map<String, Object> p = (Map<String, Object>) datos.getPayload();
+                String nombre = (String) p.get("nombre");
+                int puerto = ((Number) p.get("puertoEscucha")).intValue();
+
+                // Guardamos sesión de red
+                sesiones.put(nombre, new ClienteRemoto(ip, puerto));
+
+                // Añadimos estado "listo" inicial al payload para la lógica del lobby
+                p.put("listo", false);
+
+                System.out.println("[Control] Sesión guardada: " + nombre);
+            }
+        } catch (Exception e) {
+            System.err.println("[Control] Error en registro físico: " + e.getMessage());
+        }
+    }
+
     @Override
     public void procesarEvento(Evento evento) {
-
-        // 1. MANEJAR REGISTRO
+        // --- 1. REGISTRO ---
         if (evento.getTipo().equals(Protocolo.REGISTRO.name())) {
-            Object nuevoJugador = evento.getDato();
+            Map<String, Object> nuevoJugador = (Map<String, Object>) evento.getDato();
+            String nombre = (String) nuevoJugador.get("nombre");
 
-            if (!lista.contains(nuevoJugador)) {
-                lista.add(nuevoJugador);
-                System.out.println("[Control] Jugador agregado. Total: " + lista.size());
+            // Evitar duplicados en la lista lógica
+            boolean existe = listaJugadores.stream().anyMatch(j -> j.get("nombre").equals(nombre));
 
-                DataDTO syncDTO = new DataDTO();
-                syncDTO.setTipo(Protocolo.LISTA_JUGADORES.name()); // Usamos el enum
-                syncDTO.setPayload(new ArrayList<>(lista));
-
-                broadcastReal(syncDTO);
-            } else {
-                System.out.println("[Control] Jugador ya existe, omitiendo.");
+            if (!existe) {
+                listaJugadores.add(nuevoJugador);
+                System.out.println("[Control] Jugador en lista: " + nombre + ". Total: " + listaJugadores.size());
+                enviarListaActualizada();
             }
 
-        // 2. MANEJAR SOLICITUD DE INICIO DE PARTIDA (¡El punto de corrección!)
+            // --- 2. VOTACIÓN / INICIO ---
         } else if (evento.getTipo().equals(Protocolo.SOLICITUD_INICIO_PARTIDA.name())) {
-            manejarSolicitudInicio(evento);
+            manejarVotacion(evento);
 
-        // 3. MANEJAR SOLICITUD DE ENVÍO (Para Expertos)
+            // --- 3. ENVÍO GENÉRICO ---
         } else if (evento.getTipo().equals(EventosSistema.SOLICITUD_ENVIO)) {
-            System.out.println("[Control] Ejecutando envío a la red.");
             if (evento.getDato() instanceof DataDTO) {
-                if (dispatcher != null) {
-                    broadcastReal((DataDTO) evento.getDato());
-                } else {
-                    System.err.println("[Control-ERROR] Dispatcher es NULL.");
-                }
+                broadcastReal((DataDTO) evento.getDato());
             }
         }
     }
 
-    // =========================================================================
-    // LÓGICA DE INICIO DE PARTIDA (NUEVO MÉTODO)
-    // =========================================================================
-    private void manejarSolicitudInicio(Evento evento) {
-        
-        // 1. VALIDACIÓN: Mínimo de jugadores
-        if (sesiones.size() < MIN_JUGADORES) {
-            System.out.println("[Control-Rechazo] Inicio rechazado. Jugadores insuficientes (" + sesiones.size() + "/" + MIN_JUGADORES + ").");
+    private void manejarVotacion(Evento evento) {
+        String nombreVotante = (String) evento.getOrigen();
 
-            // Crear DTO de rechazo
-            DataDTO rechazo = new DataDTO(Protocolo.INICIO_RECHAZADO); // Usamos el enum
-            rechazo.setPayload("Mínimo " + MIN_JUGADORES + " jugadores requeridos.");
-
-            // Enviar rechazo SOLO al host (el que solicitó)
-            ClienteRemoto host = sesiones.get(evento.getOrigen());
-            if (host != null) {
-                System.out.println("[Control-Rechazo] Enviando rechazo a: " + host.ip() + ":" + host.puerto());
-                dispatcher.enviar(rechazo, host.ip(), host.puerto());
-            }
-            return;
-        }
-
-        // 2. EXTRACCIÓN DE PARÁMETROS: Obtener la dimensión
-        int dimension = 3; // Dimensión por defecto
-        if (evento.getDato() instanceof Map<?, ?> mapa) {
-            Object dimObj = mapa.get("dimension");
-            if (dimObj instanceof Number) {
-                dimension = ((Number) dimObj).intValue();
+        // 1. Marcar al jugador como listo en la lista
+        for (Map<String, Object> jugador : listaJugadores) {
+            if (jugador.get("nombre").equals(nombreVotante)) {
+                jugador.put("listo", true);
+                System.out.println("[Control] Voto registrado: " + nombreVotante);
+                break;
             }
         }
 
-        System.out.println("[Control] 🎉 Partida iniciada. Enviando broadcast con dimensión: " + dimension);
+        // 2. Contar cuántos están listos
+        long listos = listaJugadores.stream().filter(j -> (boolean) j.get("listo")).count();
+        int conectados = sesiones.size();
 
-        // 3. CREACIÓN DTO DE CONFIRMACIÓN: INICIO_PARTIDA
-        DataDTO respuesta = new DataDTO(Protocolo.INICIO_PARTIDA);
-        Map<String, Object> config = new HashMap<>();
-        config.put("dimension", dimension);
-        config.put("mensaje", "¡El juego ha comenzado!");
-        respuesta.setPayload(config);
+        // 3. Notificar a todos el cambio de estado (para que vean el Check ✅)
+        enviarListaActualizada();
 
-        // 4. BROADCAST a todos los clientes conectados
-        broadcastReal(respuesta);
+        // 4. ¿Todos listos?
+        if (listos >= conectados && conectados >= MIN_JUGADORES) {
+            System.out.println("[Control] 🚀 ¡Todos listos! Iniciando partida " + DIMENSION_POR_DEFECTO + "x" + DIMENSION_POR_DEFECTO);
+
+            DataDTO inicio = new DataDTO();
+            inicio.setTipo(Protocolo.INICIO_PARTIDA.name());
+
+            Map<String, Object> config = new HashMap<>();
+            config.put("dimension", DIMENSION_POR_DEFECTO);
+            config.put("mensaje", "¡Partida iniciada por unanimidad!");
+            inicio.setPayload(config);
+
+            broadcastReal(inicio);
+        } else {
+            System.out.println("[Control] Votos: " + listos + "/" + conectados + ". Esperando...");
+        }
     }
 
-    // =========================================================================
-    // BROADCAST (USANDO SESIONES GUARDADAS)
-    // =========================================================================
+    private void enviarListaActualizada() {
+        DataDTO syncDTO = new DataDTO();
+        syncDTO.setTipo(Protocolo.LISTA_JUGADORES.name());
+        syncDTO.setPayload(new ArrayList<>(listaJugadores));
+        broadcastReal(syncDTO);
+    }
+
     private void broadcastReal(DataDTO dto) {
         if (dispatcher == null) {
             return;
         }
-
         for (ClienteRemoto cliente : sesiones.values()) {
-            try {
-                if (cliente == null || cliente.ip == null) {
-                    continue;
-                }
-
-                System.out.println("[Control] Enviando a remoto: " + cliente.ip + ":" + cliente.puerto);
-                dispatcher.enviar(dto, cliente.ip, cliente.puerto);
-
-            } catch (Exception e) {
-                System.err.println("[Control] Error enviando a " + cliente.ip);
-            }
+            dispatcher.enviar(dto, cliente.ip(), cliente.puerto());
         }
     }
 
@@ -212,7 +174,7 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
     public void setBlackboard(Blackboard bb) {
     }
 
-    // CLASE AUXILIAR PRIVADA
     private record ClienteRemoto(String ip, int puerto) {
+
     }
 }

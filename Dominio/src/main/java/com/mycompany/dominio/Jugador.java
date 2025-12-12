@@ -12,16 +12,18 @@ import java.util.Objects;
  *
  * @author rramirez
  */
-public class Jugador implements Serializable{
+public class Jugador implements Serializable {
 
     public String nombre;
     public String rutaAvatar;
     public String color;
     public int puntaje;
     private int puertoEscucha;
+    private boolean listo;
 
     public Jugador() {
         this.puntaje = 0;
+        this.listo = false;
     }
 
     public Jugador(String nombre, String color) {
@@ -29,6 +31,7 @@ public class Jugador implements Serializable{
         this.color = color;
         this.puntaje = 0;
         this.rutaAvatar = "";
+        this.listo = false;
     }
 
     public void sumarPuntos(int puntos) {
@@ -63,14 +66,20 @@ public class Jugador implements Serializable{
         this.puertoEscucha = puertoEscucha;
     }
 
+    public boolean isListo() {
+        return listo;
+    }
+
+    public void setListo(boolean listo) {
+        this.listo = listo;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-        {
+        if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass())
-        {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
         Jugador jugador = (Jugador) o;

@@ -18,210 +18,139 @@ public class LobbyView extends JFrame implements Observer {
     private final ControllerView controlador;
     private final IModelViewLeible modelo;
 
-    // Componentes UI
     private JPanel pnlJugadores;
-    private JButton btnIniciar;
+    private JButton btnListo;
     private JLabel lblEstado;
 
     public LobbyView(ControllerView controlador, IModelViewLeible modelo) {
         this.controlador = controlador;
         this.modelo = modelo;
-
-        // Suscribirse al modelo
         this.modelo.agregarObservador(this);
 
         initComponents();
         setTitle("Lobby - Sala de Espera");
-        setSize(500, 500);
+        setSize(500, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
-        getContentPane().setBackground(new Color(245, 245, 245));
-
-        // ===== PANEL SUPERIOR: TÍTULO =====
-        JPanel pnlTitulo = new JPanel();
-        pnlTitulo.setBackground(new Color(70, 130, 180));
-        JLabel lblTitulo = new JLabel("🎮 SALA DE ESPERA");
-        lblTitulo.setFont(new Font("Arial", Font.BOLD, 24));
-        lblTitulo.setForeground(Color.WHITE);
-        pnlTitulo.add(lblTitulo);
-        add(pnlTitulo, BorderLayout.NORTH);
-
-        // ===== PANEL CENTRAL: LISTA DE JUGADORES =====
-        JPanel pnlCentro = new JPanel(new BorderLayout(10, 10));
-        pnlCentro.setBackground(Color.WHITE);
-        pnlCentro.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
-        JLabel lblSubtitulo = new JLabel("Jugadores conectados:");
-        lblSubtitulo.setFont(new Font("Arial", Font.BOLD, 16));
-        pnlCentro.add(lblSubtitulo, BorderLayout.NORTH);
-
+        
+        // --- PANEL DE LISTA (CENTRO) ---
         pnlJugadores = new JPanel();
         pnlJugadores.setLayout(new BoxLayout(pnlJugadores, BoxLayout.Y_AXIS));
-        pnlJugadores.setBackground(Color.WHITE);
+        JScrollPane scroll = new JScrollPane(pnlJugadores);
+        add(scroll, BorderLayout.CENTER);
 
-        JScrollPane scrollPane = new JScrollPane(pnlJugadores);
-        scrollPane.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        pnlCentro.add(scrollPane, BorderLayout.CENTER);
-
-        add(pnlCentro, BorderLayout.CENTER);
-
-        // ===== PANEL INFERIOR: ESTADO E INICIO =====
-        JPanel pnlInferior = new JPanel();
-        pnlInferior.setLayout(new BoxLayout(pnlInferior, BoxLayout.Y_AXIS));
-        pnlInferior.setBackground(new Color(245, 245, 245));
+        // --- PANEL INFERIOR (BOTÓN) ---
+        JPanel pnlInferior = new JPanel(new BorderLayout());
         pnlInferior.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
+        
+        lblEstado = new JLabel("Presiona el botón para indicar que estás listo");
+        lblEstado.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        btnListo = new JButton("👍 ¡ESTOY LISTO!");
+        btnListo.setBackground(new Color(46, 204, 113));
+        btnListo.setForeground(Color.WHITE);
+        btnListo.setFont(new Font("Arial", Font.BOLD, 16));
+        
+        // La acción del botón
+        btnListo.addActionListener(e -> {
+            btnListo.setEnabled(false); // Deshabilita para evitar doble clic
+            btnListo.setText("Esperando a los demás...");
+            // Enviamos la solicitud de inicio (votación)
+            controlador.onSolicitarInicioPartida(3); 
+        });
 
-        lblEstado = new JLabel("Esperando que el host inicie la partida...");
-        lblEstado.setFont(new Font("Arial", Font.ITALIC, 14));
-        lblEstado.setAlignmentX(CENTER_ALIGNMENT);
-        pnlInferior.add(lblEstado);
-        pnlInferior.add(Box.createRigidArea(new Dimension(0, 15)));
-
-        // SOLO EL HOST VE EL BOTÓN DE INICIAR
-        if (modelo.esHost()) {
-            btnIniciar = new JButton("🚀 INICIAR PARTIDA");
-            btnIniciar.setFont(new Font("Arial", Font.BOLD, 16));
-            btnIniciar.setBackground(new Color(50, 205, 50));
-            btnIniciar.setForeground(Color.WHITE);
-            btnIniciar.setFocusPainted(false);
-            btnIniciar.setAlignmentX(CENTER_ALIGNMENT);
-            btnIniciar.setMaximumSize(new Dimension(250, 50));
-            btnIniciar.setEnabled(true); // Siempre habilitado (sin validación de jugadores)
-
-            btnIniciar.addActionListener(e -> solicitarInicio());
-
-            pnlInferior.add(btnIniciar);
-        } else {
-            JLabel lblEspera = new JLabel("Esperando a que el host inicie...");
-            lblEspera.setFont(new Font("Arial", Font.PLAIN, 16));
-            lblEspera.setForeground(Color.GRAY);
-            lblEspera.setAlignmentX(CENTER_ALIGNMENT);
-            pnlInferior.add(lblEspera);
-        }
-
+        pnlInferior.add(lblEstado, BorderLayout.NORTH);
+        pnlInferior.add(btnListo, BorderLayout.CENTER);
         add(pnlInferior, BorderLayout.SOUTH);
     }
 
     // =========================================================================
-    // IMPLEMENTAR Observer
+    // MÉTODO CLAVE: ACTUALIZACIÓN VISUAL
     // =========================================================================
     @Override
     public void actualizar() {
-        // Actualizar lista de jugadores
-        List<Jugador> jugadores = modelo.getJugadores();
-        actualizarListaJugadores(jugadores);
+        // La lista de Jugador ya viene actualizada por el ModelView
+        actualizarListaJugadores(modelo.getJugadores());
 
-        // Verificar si hubo rechazo
-        if (modelo instanceof ModelView) {
-            String rechazo = ((ModelView) modelo).consumirMensajeRechazo();
-            if (rechazo != null) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "No se pudo iniciar:\n" + rechazo,
-                        "Inicio Rechazado",
-                        JOptionPane.WARNING_MESSAGE
-                );
-
-                if (btnIniciar != null) {
-                    btnIniciar.setEnabled(true);
-                    btnIniciar.setText("🚀 INICIAR PARTIDA");
-                    lblEstado.setText("Esperando que el host inicie la partida...");
-                }
-            }
+        // Manejar el cierre de la ventana si la partida ya comenzó
+        if (!modelo.isEnLobby()) {
+            this.dispose(); 
+            return;
         }
 
-        // Si la partida inició, cerrar
-        if (!modelo.isEnLobby()) {
-            System.out.println("[LobbyView] Partida iniciada, cerrando lobby...");
-            this.dispose();
+        // Manejar el botón del jugador local después de un voto (si el servidor lo "des-listó" por error)
+        Jugador yo = modelo.getJugadorLocal();
+        if (yo != null && yo.isListo()) {
+             btnListo.setEnabled(false);
+             btnListo.setText("Esperando a los demás...");
+        } else if (yo != null && !yo.isListo() && !btnListo.isEnabled()) {
+            // Caso de rechazo o error, volvemos a habilitar el botón si es necesario
+            btnListo.setEnabled(true);
+            btnListo.setText("👍 ¡ESTOY LISTO!");
         }
     }
 
-    // =========================================================================
-    // ACTUALIZACIÓN DE LISTA DE JUGADORES
-    // =========================================================================
     private void actualizarListaJugadores(List<Jugador> jugadores) {
         SwingUtilities.invokeLater(() -> {
             pnlJugadores.removeAll();
-
+            int listos = 0;
+            
             for (Jugador j : jugadores) {
+                if(j.isListo()) listos++;
                 pnlJugadores.add(crearPanelJugador(j));
-                pnlJugadores.add(Box.createRigidArea(new Dimension(0, 10)));
+                pnlJugadores.add(Box.createRigidArea(new Dimension(0, 5)));
             }
-
-            // Actualizar estado
-            int count = jugadores.size();
-            if (modelo.esHost()) {
-                lblEstado.setText(count + " jugador(es) en la sala");
-            }
-
+            
+            // Actualiza el estado general de votos
+            lblEstado.setText("Votos: " + listos + " / " + jugadores.size());
+            
             pnlJugadores.revalidate();
             pnlJugadores.repaint();
         });
     }
 
     private JPanel crearPanelJugador(Jugador j) {
-        JPanel panel = new JPanel(new BorderLayout(10, 0));
-        panel.setBackground(Color.WHITE);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
-        panel.setMaximumSize(new Dimension(450, 60));
+        JPanel panel = new JPanel(new BorderLayout(15, 0));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+        panel.setMaximumSize(new Dimension(480, 60));
 
-        // Avatar placeholder
-        JPanel avatar = new JPanel();
-        avatar.setPreferredSize(new Dimension(40, 40));
-        avatar.setBackground(decodificarColor(j.getColor()));
-        avatar.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 2));
-        panel.add(avatar, BorderLayout.WEST);
+        // 1. Color del jugador
+        JPanel pnlColor = new JPanel();
+        pnlColor.setPreferredSize(new Dimension(30, 30));
+        try {
+            pnlColor.setBackground(Color.decode(j.getColor()));
+        } catch (Exception e) {
+            pnlColor.setBackground(Color.GRAY);
+        }
+        panel.add(pnlColor, BorderLayout.WEST);
 
-        // Nombre
-        JLabel lblNombre = new JLabel(j.getNombre());
-        lblNombre.setFont(new Font("Arial", Font.BOLD, 16));
+        // 2. Nombre
+        String textoNombre = j.getNombre();
+        if (j.getNombre().equals(modelo.getJugadorLocal().getNombre())) {
+            textoNombre += " (TÚ)";
+        }
+        JLabel lblNombre = new JLabel(textoNombre);
+        lblNombre.setFont(new Font("Arial", Font.BOLD, 14));
         panel.add(lblNombre, BorderLayout.CENTER);
 
-        // Indicador de jugador local
-        if (j.getNombre().equals(modelo.getJugadorLocal().getNombre())) {
-            JLabel lblYo = new JLabel("(TÚ)");
-            lblYo.setFont(new Font("Arial", Font.ITALIC, 12));
-            lblYo.setForeground(Color.BLUE);
-            panel.add(lblYo, BorderLayout.EAST);
+        // 3. INDICADOR DE ESTADO (La "Palomita")
+        if (j.isListo()) { // <<-- AQUI ESTÁ LA LÓGICA DE LA PALOMITA
+            JLabel lblCheck = new JLabel("✅ LISTO");
+            lblCheck.setForeground(new Color(39, 174, 96)); // Verde oscuro
+            lblCheck.setFont(new Font("Arial", Font.BOLD, 14));
+            panel.add(lblCheck, BorderLayout.EAST);
+            panel.setBackground(new Color(230, 255, 230)); // Fondo verde claro
+        } else {
+            JLabel lblEspera = new JLabel("⏳ Esperando...");
+            lblEspera.setForeground(Color.GRAY);
+            panel.add(lblEspera, BorderLayout.EAST);
+            panel.setBackground(Color.WHITE);
         }
 
         return panel;
-    }
-
-    // =========================================================================
-    // SOLICITUD DE INICIO (SOLO HOST - SIN CONFIGURACIÓN)
-    // =========================================================================
-    private void solicitarInicio() {
-        System.out.println("[LobbyView] Host solicitando inicio de partida...");
-
-        // FLUJO: Vista → Controlador → Modelo → Motor
-        // Dimensión hardcodeada (puedes cambiarla aquí: 3-20)
-        int dimensionTablero = 3; // <-- CAMBIAR AQUÍ SI QUIERES OTRA DIMENSIÓN
-
-        controlador.onSolicitarInicioPartida(dimensionTablero);
-
-        // Deshabilitar botón mientras espera respuesta
-        btnIniciar.setEnabled(false);
-        btnIniciar.setText("Iniciando...");
-        lblEstado.setText("Iniciando partida...");
-    }
-
-    // =========================================================================
-    // UTILIDADES
-    // =========================================================================
-    private Color decodificarColor(String hex) {
-        try {
-            return Color.decode(hex);
-        } catch (Exception e) {
-            return Color.GRAY;
-        }
     }
 }
