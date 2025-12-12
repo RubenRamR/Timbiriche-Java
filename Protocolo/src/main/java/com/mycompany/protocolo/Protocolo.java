@@ -30,6 +30,7 @@ public enum Protocolo {
      * Servidor -> Todos: "Ya estamos todos, comienza el juego"
      */
     INICIO_PARTIDA,
+    
     INICIO_RECHAZADO,
     // --- 2. FLUJO DEL JUEGO (TIMBIRICHE) ---
     /**

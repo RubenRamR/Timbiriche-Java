@@ -34,6 +34,8 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
     private Jugador turnoActual;
     private boolean juegoTerminado = false;
     private Object tamanoSeleccionado;
+    // Para comunicar rechazo al LobbyView
+    private String ultimoMensajeRechazo = null;
 
     public ModelView(IMotorJuego motor) {
         this.motor = motor;
@@ -222,13 +224,31 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
 
     @Override
     public void onPartidaIniciada(int dimension) {
-        System.out.println("[ModelView] Partida iniciada. Dimensión: " + dimension);
-        notificarObservadores(); // LobbyView se cerrará, GameView se abrirá
+        System.out.println("[ModelView] 🎉 onPartidaIniciada() llamado - Dimensión: " + dimension);
+        System.out.println("[ModelView] 📢 Notificando a " + observadores.size() + " observadores...");
+
+        for (Observer o : observadores) {
+            System.out.println("[ModelView]    └─> Notificando a: " + o.getClass().getSimpleName());
+        }
+
+        notificarObservadores();
+        System.out.println("[ModelView] ✅ Notificación completada");
     }
 
     @Override
     public void onInicioRechazado(String motivo) {
         System.err.println("[ModelView] Inicio rechazado: " + motivo);
         notificarObservadores(); // LobbyView mostrará el error
+    }
+
+    /**
+     * Permite al LobbyView consultar si hubo un rechazo
+     *
+     * @return Mensaje de rechazo o null
+     */
+    public String consumirMensajeRechazo() {
+        String msg = this.ultimoMensajeRechazo;
+        this.ultimoMensajeRechazo = null; // Limpiar después de leer
+        return msg;
     }
 }
