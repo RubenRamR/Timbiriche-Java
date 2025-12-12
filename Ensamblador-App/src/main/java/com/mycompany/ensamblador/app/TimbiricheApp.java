@@ -354,11 +354,20 @@ public class TimbiricheApp {
                     if (nombre != null && color != null) {
                         Jugador j = new Jugador(nombre, color);
 
-                        // Restaurar puerto si existe
+                        // **CRÍTICO**: Restaurar puerto si existe
                         if (mapa.containsKey("puertoEscucha")) {
                             Object puertoObj = mapa.get("puertoEscucha");
                             if (puertoObj instanceof Number) {
                                 j.setPuertoEscucha(((Number) puertoObj).intValue());
+                            }
+                        }
+
+                        // **NUEVO**: Restaurar estado "listo"
+                        if (mapa.containsKey("listo")) {
+                            Object listoObj = mapa.get("listo");
+                            if (listoObj instanceof Boolean) {
+                                j.setListo((Boolean) listoObj);
+                                System.out.println("[App-Conversor] " + nombre + " | listo=" + listoObj);
                             }
                         }
 

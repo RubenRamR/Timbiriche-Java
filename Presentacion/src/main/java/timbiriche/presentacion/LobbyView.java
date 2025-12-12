@@ -36,7 +36,7 @@ public class LobbyView extends JFrame implements Observer {
 
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
-        
+
         // --- PANEL DE LISTA (CENTRO) ---
         pnlJugadores = new JPanel();
         pnlJugadores.setLayout(new BoxLayout(pnlJugadores, BoxLayout.Y_AXIS));
@@ -46,21 +46,21 @@ public class LobbyView extends JFrame implements Observer {
         // --- PANEL INFERIOR (BOTÓN) ---
         JPanel pnlInferior = new JPanel(new BorderLayout());
         pnlInferior.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
-        
+
         lblEstado = new JLabel("Presiona el botón para indicar que estás listo");
         lblEstado.setHorizontalAlignment(SwingConstants.CENTER);
-        
+
         btnListo = new JButton("👍 ¡ESTOY LISTO!");
         btnListo.setBackground(new Color(46, 204, 113));
         btnListo.setForeground(Color.WHITE);
         btnListo.setFont(new Font("Arial", Font.BOLD, 16));
-        
+
         // La acción del botón
         btnListo.addActionListener(e -> {
             btnListo.setEnabled(false); // Deshabilita para evitar doble clic
             btnListo.setText("Esperando a los demás...");
             // Enviamos la solicitud de inicio (votación)
-            controlador.onSolicitarInicioPartida(3); 
+            controlador.onSolicitarInicioPartida(3);
         });
 
         pnlInferior.add(lblEstado, BorderLayout.NORTH);
@@ -73,43 +73,64 @@ public class LobbyView extends JFrame implements Observer {
     // =========================================================================
     @Override
     public void actualizar() {
-        // La lista de Jugador ya viene actualizada por el ModelView
-        actualizarListaJugadores(modelo.getJugadores());
+        System.out.println("[LobbyView] 🔄 actualizar() llamado");
+        System.out.println("[LobbyView] Estado lobby: " + modelo.isEnLobby());
 
         // Manejar el cierre de la ventana si la partida ya comenzó
         if (!modelo.isEnLobby()) {
-            this.dispose(); 
+            System.out.println("[LobbyView] 🚪 Cerrando lobby (partida iniciada)");
+            SwingUtilities.invokeLater(() -> this.dispose());
             return;
         }
 
-        // Manejar el botón del jugador local después de un voto (si el servidor lo "des-listó" por error)
+        // La lista de Jugador ya viene actualizada por el ModelView
+        List<Jugador> jugadores = modelo.getJugadores();
+        System.out.println("[LobbyView] Jugadores recibidos: " + jugadores.size());
+
+        actualizarListaJugadores(jugadores);
+
+        // Manejar el botón del jugador local
         Jugador yo = modelo.getJugadorLocal();
-        if (yo != null && yo.isListo()) {
-             btnListo.setEnabled(false);
-             btnListo.setText("Esperando a los demás...");
-        } else if (yo != null && !yo.isListo() && !btnListo.isEnabled()) {
-            // Caso de rechazo o error, volvemos a habilitar el botón si es necesario
-            btnListo.setEnabled(true);
-            btnListo.setText("👍 ¡ESTOY LISTO!");
+        if (yo != null) {
+            System.out.println("[LobbyView] Mi estado: Listo=" + yo.isListo());
+
+            if (yo.isListo() && btnListo.isEnabled()) {
+                SwingUtilities.invokeLater(() -> {
+                    btnListo.setEnabled(false);
+                    btnListo.setText("⏳ Esperando a los demás...");
+                    btnListo.setBackground(new Color(149, 165, 166)); // Gris
+                });
+            }
         }
     }
 
     private void actualizarListaJugadores(List<Jugador> jugadores) {
         SwingUtilities.invokeLater(() -> {
+            System.out.println("[LobbyView] 🎨 Redibujando lista de jugadores");
+
             pnlJugadores.removeAll();
             int listos = 0;
-            
+
             for (Jugador j : jugadores) {
-                if(j.isListo()) listos++;
+                if (j.isListo()) {
+                    listos++;
+                    System.out.println("[LobbyView]   ✅ " + j.getNombre() + " está listo");
+                } else {
+                    System.out.println("[LobbyView]   ⏳ " + j.getNombre() + " esperando");
+                }
+
                 pnlJugadores.add(crearPanelJugador(j));
                 pnlJugadores.add(Box.createRigidArea(new Dimension(0, 5)));
             }
-            
+
             // Actualiza el estado general de votos
             lblEstado.setText("Votos: " + listos + " / " + jugadores.size());
-            
+            System.out.println("[LobbyView] 📊 Votos totales: " + listos + "/" + jugadores.size());
+
             pnlJugadores.revalidate();
             pnlJugadores.repaint();
+
+            System.out.println("[LobbyView] ✅ Lista redibujada");
         });
     }
 
@@ -130,25 +151,30 @@ public class LobbyView extends JFrame implements Observer {
 
         // 2. Nombre
         String textoNombre = j.getNombre();
-        if (j.getNombre().equals(modelo.getJugadorLocal().getNombre())) {
+        if (modelo.getJugadorLocal() != null
+                && j.getNombre().equals(modelo.getJugadorLocal().getNombre())) {
             textoNombre += " (TÚ)";
         }
         JLabel lblNombre = new JLabel(textoNombre);
         lblNombre.setFont(new Font("Arial", Font.BOLD, 14));
         panel.add(lblNombre, BorderLayout.CENTER);
 
-        // 3. INDICADOR DE ESTADO (La "Palomita")
-        if (j.isListo()) { // <<-- AQUI ESTÁ LA LÓGICA DE LA PALOMITA
+        // 3. INDICADOR DE ESTADO
+        System.out.println("[LobbyView-Panel] Creando panel para " + j.getNombre() + " | listo=" + j.isListo());
+
+        if (j.isListo()) {
             JLabel lblCheck = new JLabel("✅ LISTO");
-            lblCheck.setForeground(new Color(39, 174, 96)); // Verde oscuro
+            lblCheck.setForeground(new Color(39, 174, 96));
             lblCheck.setFont(new Font("Arial", Font.BOLD, 14));
             panel.add(lblCheck, BorderLayout.EAST);
-            panel.setBackground(new Color(230, 255, 230)); // Fondo verde claro
+            panel.setBackground(new Color(230, 255, 230)); // Verde claro
+            System.out.println("[LobbyView-Panel] ✅ Panel VERDE para " + j.getNombre());
         } else {
             JLabel lblEspera = new JLabel("⏳ Esperando...");
             lblEspera.setForeground(Color.GRAY);
             panel.add(lblEspera, BorderLayout.EAST);
             panel.setBackground(Color.WHITE);
+            System.out.println("[LobbyView-Panel] ⏳ Panel BLANCO para " + j.getNombre());
         }
 
         return panel;

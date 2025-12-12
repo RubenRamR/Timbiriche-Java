@@ -217,12 +217,22 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
 
     @Override
     public void onListaJugadoresActualizada(List<Jugador> jugadores) {
-        System.out.println("[ModelView] Actualizando lobby. Jugadores: " + jugadores.size());
+        System.out.println("[ModelView] 📢 Actualizando lobby. Jugadores: " + jugadores.size());
+
+        // Actualizar cache local
         this.jugadores = jugadores;
 
-        // Si el jugador local aparece como "listo" en la lista que mandó el servidor,
-        // podríamos actualizar botones aquí, pero la LobbyView ya lo hace al repintar.
+        // Mostrar estado detallado para debug
+        for (Jugador j : jugadores) {
+            System.out.println("[ModelView]   - " + j.getNombre()
+                    + " | Listo: " + j.isListo()
+                    + " | Color: " + j.getColor());
+        }
+
+        // **CRÍTICO**: Notificar a los observadores (LobbyView)
         notificarObservadores();
+
+        System.out.println("[ModelView] ✅ Notificación enviada a " + observadores.size() + " observadores");
     }
 
     @Override
