@@ -74,4 +74,6 @@ public interface IMotorJuego {
      * que la UI muestre la lista.
      */
     List<Jugador> getJugadores();
+    
+    void crearPartida(int dimension); 
 }

@@ -89,7 +89,6 @@ public class ReceptorCliente implements Runnable {
                             dto.setIpRemitente(ipReal); 
                             System.out.println("[RED-IP] IP Inyectada al DTO: " + ipReal);
                         }
-                        // =========================================================
 
                         if (receptorExterno != null) {
                             

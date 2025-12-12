@@ -17,6 +17,7 @@ import com.mycompany.dominio.Jugador;
 import com.mycompany.protocolo.Protocolo;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -50,7 +51,6 @@ public class MotorJuego implements IMotorJuego {
      */
     public void configurarTablero(int dimension) {
         this.tablero = new Tablero(dimension);
-        // Notificamos a la vista que el modelo cambió drásticamente
         notificarCambios();
     }
 
@@ -337,5 +337,46 @@ public class MotorJuego implements IMotorJuego {
     @Override
     public List<Jugador> getJugadores() {
         return listaJugadores;
-    } 
+    }
+
+    public void crearPartida(int dimension) {
+        try
+        {
+            this.configurarTablero(dimension);
+
+            if (this.jugadorLocal == null)
+            {
+                System.out.println("Sin jugador local");
+            }
+
+            DataDTO configDTO = new DataDTO(Protocolo.CREAR_PARTIDA);
+            configDTO.setProyectoOrigen(this.jugadorLocal.getNombre());
+
+            Map<String, Object> configData = new HashMap<>();
+            configData.put("dimension", dimension);
+            configDTO.setPayload(configData);
+
+            notificarDespachadores(configDTO);
+
+            DataDTO registroDTO = new DataDTO(Protocolo.UNIRSE_PARTIDA);
+            registroDTO.setProyectoOrigen(this.jugadorLocal.getNombre());
+            registroDTO.setPayload(this.jugadorLocal);
+
+            try
+            {
+                Thread.sleep(50);
+            } catch (InterruptedException i)
+            {
+            }
+
+            notificarDespachadores(registroDTO);
+
+            notificarCambios();
+
+        } catch (Exception e)
+        {
+            System.err.println("Error creando partida: " + e.getMessage());
+        }
+    }
+
 }

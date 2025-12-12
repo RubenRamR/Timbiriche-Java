@@ -58,7 +58,7 @@ public class GameView extends javax.swing.JFrame implements Observer {
 
         // 1. Configuración de Ventana
         actualizarTitulo();
-//        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
 
         // 2. Observer
@@ -193,7 +193,7 @@ public class GameView extends javax.swing.JFrame implements Observer {
                 lblEstadoTurno.setForeground(decodificarColor(jugadorTurno.getColor()));
             }
 
-            pnlMarcador.add(lblTituloTurno);
+            pnlMarcador.add(lblTituloTurno); 
             pnlMarcador.add(lblEstadoTurno);
             // ... el resto de la lista de jugadores ...
             pnlMarcador.add(javax.swing.Box.createRigidArea(new Dimension(0, 40)));
@@ -201,6 +201,15 @@ public class GameView extends javax.swing.JFrame implements Observer {
             List<Jugador> jugadores = modeloLeible.getJugadores();
             if (jugadores != null)
             {
+                // 1. Obtenemos la referencia
+                List<Jugador> listaOriginal = modeloLeible.getJugadores();
+
+                // 2. Sincronizamos para crear una COPIA segura
+                List<Jugador> copiaJugadores;
+                synchronized (listaOriginal)
+                {
+                    copiaJugadores = new ArrayList<>(listaOriginal);
+                }
                 for (Jugador j : jugadores)
                 {
                     pnlMarcador.add(crearPanelJugador(j));
@@ -273,13 +282,17 @@ public class GameView extends javax.swing.JFrame implements Observer {
 
         // 2. Líneas
         List<Linea> lineas = modeloLeible.getLineasDibujadas();
-        if (lineas != null) {
+        if (lineas != null)
+        {
             g2.setStroke(new BasicStroke(GROSOR_LINEA));
-            
-            for (Linea l : lineas) {
-                if (l.getPropietario() != null) {
+
+            for (Linea l : lineas)
+            {
+                if (l.getPropietario() != null)
+                {
                     g2.setColor(decodificarColor(l.getPropietario().getColor()));
-                } else {
+                } else
+                {
                     g2.setColor(Color.BLACK);
                 }
                 // ------------------------------
@@ -430,9 +443,12 @@ public class GameView extends javax.swing.JFrame implements Observer {
 
     @Override
     public void actualizar() {
-        actualizarTitulo(); 
-        actualizarMarcador(); 
-        pnlLienzo.repaint(); 
+        javax.swing.SwingUtilities.invokeLater(() ->
+        {
+            actualizarTitulo();
+            actualizarMarcador();
+            pnlLienzo.repaint();
+        });
     }
 
     /**
@@ -591,7 +607,7 @@ public class GameView extends javax.swing.JFrame implements Observer {
             new GameView(mockController, mockModelo).setVisible(true);
         });
     }
- 
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel PnlFondo;

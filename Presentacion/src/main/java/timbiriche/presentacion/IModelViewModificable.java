@@ -15,4 +15,6 @@ public interface IModelViewModificable {
     void actualizarJugadaLocal(Linea linea);
 
     void actualizarEstadoDesdeMotor();
+    
+    void crearPartida(int dimension);
 }

@@ -58,5 +58,7 @@ public enum Protocolo {
      */
     SOLICITUD_ENVIO,
     LISTA_JUGADORES,
-    REGISTRO
+    REGISTRO,
+    CREAR_PARTIDA,
+    UNIRSE_PARTIDA
 }

@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  *
  * @author rramirez
  */
-public class ModelView implements IModelViewLeible, IModelViewModificable, IMotorJuegoListener {
+public class ModelView implements IModelViewLeible, IModelViewModificable, IMotorJuegoListener, Subjet {
 
     private IMotorJuego motor;
     private List<Observer> observadores;
@@ -39,15 +39,12 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
         this.motor = motor;
         this.observadores = new ArrayList<>();
 
-        // Inicializar listas para evitar NullPointer en la UI antes de conectar
         this.lineasDibujadas = new ArrayList<>();
         this.jugadores = new ArrayList<>();
         this.cuadrosRellenos = new ArrayList<>();
 
-        // Suscribirse al motor para recibir actualizaciones de la red/lógica
         this.motor.registrarListener(this);
 
-        // Carga inicial
         actualizarEstadoDesdeMotor();
     }
 
@@ -56,13 +53,11 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
     // =========================================================
     @Override
     public void onJuegoActualizado(Tablero tablero, Jugador turnoActual) {
-        // Actualizamos el caché local con los datos frescos del dominio
         this.lineasDibujadas = tablero.lineasDibujadas;
-        this.cuadrosRellenos = tablero.cuadros; // La UI filtrará los isCompletado()
+        this.cuadrosRellenos = tablero.cuadros;
         this.turnoActual = turnoActual;
-        this.jugadores = motor.getJugadores(); // Actualizamos lista de jugadores
+        this.jugadores = motor.getJugadores(); 
 
-        // Avisamos a la Vista que se repinte
         notificarObservadores();
     }
 
@@ -207,5 +202,14 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
     @Override
     public boolean esJuegoTerminado() {
         return this.juegoTerminado;
+    }
+    
+    @Override
+    public void crearPartida(int dimension) {
+        System.out.println("MODELVIEW: Creando partida de " + dimension + "x" + dimension);
+        
+        this.tamanoSeleccionado = dimension;
+        
+        motor.crearPartida(dimension);
     }
 }

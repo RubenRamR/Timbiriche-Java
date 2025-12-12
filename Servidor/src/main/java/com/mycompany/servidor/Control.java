@@ -21,10 +21,9 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
     private IDispatcher dispatcher;
     private final Blackboard blackboard;
 
-    // Mapa: ID del Proyecto -> ClienteRemoto (IP + Puerto)
     private Map<String, ClienteRemoto> sesiones = new HashMap<>();
 
-    // Lista genérica. El servidor NO sabe qué es un Jugador, solo guarda datos.
+    // Lista genérica.
     private final List<Object> lista;
 
     public Control() {
@@ -45,53 +44,13 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
     public void recibirMensaje(DataDTO datos) {
         if (datos == null)
         {
-            System.err.println("[Control] Error: DTO nulo.");
             return;
         }
 
         System.out.println("[Control] Recibido DTO Tipo: " + datos.getTipo());
 
-        String ipRemitente = datos.getIpRemitente();
-        if (ipRemitente == null || ipRemitente.isEmpty())
-        {
-            ipRemitente = "127.0.0.1";
-        }
-
-        if (datos.getTipo().equals("REGISTRO"))
-        {
-            try
-            {
-                Object payload = datos.getPayload();
-                int puertoDelJugador = 0;
-                String nombreJugador = datos.getProyectoOrigen();
-
-                // INTROSPECCIÓN DINÁMICA:
-                if (payload instanceof Map)
-                {
-                    Map<?, ?> mapaDatos = (Map<?, ?>) payload;
-                    if (mapaDatos.containsKey("puertoEscucha"))
-                    {
-                        Object val = mapaDatos.get("puertoEscucha");
-                        puertoDelJugador = (Integer) val;
-                    }
-                }
-
-                if (puertoDelJugador > 0)
-                {
-                    sesiones.put(
-                            nombreJugador,
-                            new ClienteRemoto(ipRemitente, puertoDelJugador)
-                    );
-                    System.out.println("[Control] Sesión guardada (Dinámica): " + nombreJugador
-                            + " -> " + ipRemitente + ":" + puertoDelJugador);
-                }
-
-            } catch (Exception e)
-            {
-                System.err.println("[Control] Error extrayendo puerto del payload genérico: " + e.getMessage());
-            }
-        }
-        // -----------------------------------------------------------
+        //Registro        
+        registrarSesionAutomatica(datos);
 
         Evento evento = convertirDTOaEvento(datos);
         blackboard.publicarEvento(evento);
@@ -104,8 +63,6 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
         {
             Object nuevoJugador = evento.getDato();
 
-            // Java sabe comparar Maps por contenido. 
-            // Si llega el mismo JSON, generará un Map igual, así que contains funciona.
             if (!lista.contains(nuevoJugador))
             {
                 lista.add(nuevoJugador);
@@ -178,6 +135,80 @@ public class Control implements IReceptorExterno, IFuenteConocimiento {
     public void setBlackboard(Blackboard bb) {
     }
 
+    private void registrarSesionAutomatica(DataDTO datos) {
+        try
+        {
+            String tipo = datos.getTipo(); // String puro
+            String ip = datos.getIpRemitente() != null ? datos.getIpRemitente() : "127.0.0.1";
+            String nombre = datos.getProyectoOrigen();
+            Object payload = datos.getPayload();
+            int puerto = 0;
+
+            // CASO A: UNIRSE_PARTIDA o REGISTRO (Payload es el Jugador directo)
+            if ("UNIRSE_PARTIDA".equals(tipo) || "REGISTRO".equals(tipo))
+            {
+                if (payload instanceof Map)
+                {
+                    puerto = getIntFromMap((Map) payload, "puertoEscucha");
+                }
+            } // CASO B: CREAR_PARTIDA (Payload es {jugador: {...}, dimension: X})
+            else if ("CREAR_PARTIDA".equals(tipo))
+            {
+                if (payload instanceof Map)
+                {
+                    Map root = (Map) payload;
+                    Object jugadorObj = root.get("jugador");
+                    if (jugadorObj instanceof Map)
+                    {
+                        puerto = getIntFromMap((Map) jugadorObj, "puertoEscucha");
+                    }
+                }
+            }
+
+            // Si encontramos puerto y nombre, guardamos la sesión
+            if (puerto > 0 && nombre != null)
+            {
+                sesiones.put(nombre, new ClienteRemoto(ip, puerto));
+                System.out.println("[Control] Sesión registrada: " + nombre + " -> " + ip + ":" + puerto);
+            }
+
+        } catch (Exception e)
+        {
+            System.err.println("[Control] Error al registrar sesión: " + e.getMessage());
+        }
+    }
+
+    private void enviarUnicast(DataDTO dto, String destinatario) {
+        if (dispatcher == null)
+        {
+            return;
+        }
+
+        ClienteRemoto cliente = sesiones.get(destinatario);
+        if (cliente != null)
+        {
+            System.out.println("[Control] Enviando DIRECTO a " + destinatario + " (" + cliente.ip + ":" + cliente.puerto + ")");
+            dispatcher.enviar(dto, cliente.ip, cliente.puerto);
+        } else
+        {
+            System.err.println("[Control] No se encontró sesión para: " + destinatario);
+        }
+    }
+
+    private int getIntFromMap(Map map, String key) {
+        if (map.containsKey(key))
+        {
+            Object val = map.get(key);
+            if (val instanceof Number)
+            {
+                return ((Number) val).intValue();
+            }
+        }
+        return 0;
+    }
+
     // CLASE AUXILIAR PRIVADA
-    private record ClienteRemoto(String ip, int puerto) {}
+    private record ClienteRemoto(String ip, int puerto) {
+
+    }
 }

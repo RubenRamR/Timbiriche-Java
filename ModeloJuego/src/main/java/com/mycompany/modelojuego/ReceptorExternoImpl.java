@@ -40,6 +40,10 @@ public class ReceptorExternoImpl implements IReceptorExterno {
 
             switch (protocolo)
             {
+                case CREAR_PARTIDA:
+                    System.out.println("[RECEPTOR] Llegó configuración de partida.");
+                    procesarConfiguracionPartida(datos);
+                    break;
                 // ============================================================
                 // CASO: JUGADAS
                 // ============================================================
@@ -198,5 +202,32 @@ public class ReceptorExternoImpl implements IReceptorExterno {
             }
         }
         return null;
+    }
+
+    private void procesarConfiguracionPartida(DataDTO datos) {
+        Object payload = datos.getPayload();
+        int dimension = 0;
+
+        if (payload instanceof Map)
+        {
+            Map<String, Object> mapa = (Map<String, Object>) payload;
+
+            if (mapa.containsKey("dimension"))
+            {
+                dimension = getInt(mapa.get("dimension"));
+            }
+        }
+        else if (payload instanceof Integer)
+        {
+            dimension = (Integer) payload;
+        }
+
+        if (dimension > 0)
+        {
+            System.out.println("Receptor: Configurando tablero remoto a " + dimension + "x" + dimension);
+            motorJuego.configurarTablero(dimension);
+        }else {
+            System.err.println("[RECEPTOR] Llegó CREAR_PARTIDA pero no encontré la dimensión en el payload.");
+        }
     }
 }

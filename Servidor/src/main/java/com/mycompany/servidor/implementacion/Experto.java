@@ -11,6 +11,7 @@ import com.mycompany.servidor.Evento;
 import com.mycompany.servidor.IFuenteConocimiento;
 import java.util.List;
 import com.mycompany.servidor.EventosSistema;
+import java.util.ArrayList;
 
 /**
  *
@@ -18,12 +19,14 @@ import com.mycompany.servidor.EventosSistema;
  */
 public class Experto implements IFuenteConocimiento {
 
-    private final Object identificador;
+    private Object configuracionGuardada;
     private Blackboard blackboard;
+    private List<Object> lista;
 
-    public Experto(Object identificador, Blackboard bb) {
-        this.identificador = identificador;
+    public Experto(Object configuracionGuardada, Blackboard bb) {
+        this.configuracionGuardada = configuracionGuardada;
         this.blackboard = bb;
+        lista = new ArrayList<>();
     }
 
     @Override
@@ -33,6 +36,8 @@ public class Experto implements IFuenteConocimiento {
 
     @Override
     public void procesarEvento(Evento evento) {
+        String origen = (String) evento.getOrigen();
+        Object dato = evento.getDato();
         if (evento.getTipo().equals(Protocolo.INTENTO_JUGADA.name()))
         {
 
@@ -42,6 +47,40 @@ public class Experto implements IFuenteConocimiento {
             Object datoOpaco = evento.getDato();
 
             ejecutarLogica(datoOpaco, quienJugo);
+        }
+        String tipo = evento.getTipo();
+        Object payload = evento.getDato();
+
+        // ---------------------------------------------------------------------
+        // GUARDAR CONFIGURACIÓN (Solo guarda)
+        // ---------------------------------------------------------------------
+        if (tipo.equals(Protocolo.CREAR_PARTIDA.name()))
+        {
+            System.out.println("[Experto] Configuración recibida y guardada.");
+            this.configuracionGuardada = payload;
+        } // ---------------------------------------------------------------------
+        // CASO 2: UNIRSE A LA PARTIDA (Aquí entra el Host Y el Guest)
+        // ---------------------------------------------------------------------
+        else if (tipo.equals(Protocolo.UNIRSE_PARTIDA.name()) || tipo.equals("REGISTRO"))
+        {
+            System.out.println("[Experto] Procesando ingreso de: " + origen);
+
+            // A. Agregar a la lista (Evitar duplicados exactos)
+            if (!lista.contains(payload))
+            {
+                lista.add(payload);
+            }
+
+            // B. Si hay una configuración guardada, se la enviamos al recién llegado
+            if (this.configuracionGuardada != null)
+            {
+                DataDTO dtoConfig = new DataDTO(Protocolo.CREAR_PARTIDA);
+                dtoConfig.setPayload(this.configuracionGuardada);
+                dtoConfig.setProyectoDestino(origen); // Solo para él
+                generarEventoSalida(dtoConfig);
+            }
+
+            publicarLista();
         }
     }
 
@@ -105,5 +144,12 @@ public class Experto implements IFuenteConocimiento {
                 "SERVER"
         );
         blackboard.publicarEvento(solicitud);
+    }
+
+    private void publicarLista() {
+        DataDTO dto = new DataDTO(Protocolo.LISTA_JUGADORES);
+        dto.setPayload(new ArrayList<>(this.lista));
+        System.out.println("[Experto] Enviando lista de " + lista.size() + " jugadores a todos.");
+        generarEventoSalida(dto);
     }
 }

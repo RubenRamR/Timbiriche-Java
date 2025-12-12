@@ -18,7 +18,6 @@ public class DataDTO implements Serializable {
     private String proyectoDestino;
 
     private String ipRemitente;
-    // ----------------------------
 
     public DataDTO() {
     }

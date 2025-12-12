@@ -81,4 +81,10 @@ public class Jugador implements Serializable{
     public int hashCode() {
         return Objects.hash(nombre);
     }
+
+    @Override
+    public String toString() {
+        return "Jugador{" + "nombre=" + nombre + ", rutaAvatar=" + rutaAvatar + ", color=" + color + ", puntaje=" + puntaje + ", puertoEscucha=" + puertoEscucha + '}';
+    }
+    
 }
