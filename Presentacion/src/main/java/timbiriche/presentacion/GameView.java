@@ -294,59 +294,44 @@ public class GameView extends javax.swing.JFrame implements Observer {
             if (c.getPropietario() != null) {
                 Punto topLeft = getTopLeft(c.getLineas());
                 if (topLeft != null) {
-
                     int px = m.originX + (topLeft.getX() * m.espacio);
                     int py = m.originY + (topLeft.getY() * m.espacio);
 
                     Color colorJug = decodificarColor(c.getPropietario().getColor());
                     g2.setColor(colorJug);
-
                     int offsetRelleno = GROSOR_LINEA;
                     int tamRelleno = m.espacio - (GROSOR_LINEA * 2);
+                    g2.fillRect(px + offsetRelleno, py + offsetRelleno, tamRelleno, tamRelleno);
 
-                    int cuadroX = px + offsetRelleno;
-                    int cuadroY = py + offsetRelleno;
-                    g2.fillRect(cuadroX, cuadroY, tamRelleno, tamRelleno);
-
-                    // Borde blanco opcional
-                    g2.setColor(Color.WHITE);
-                    g2.drawRect(cuadroX, cuadroY, tamRelleno, tamRelleno);
-
-                    // === Intentar dibujar el avatar en el centro del cuadro ===
-                    boolean avatarDibujado = false;
-                    try {
-                        Jugador propietario = c.getPropietario();
-                        String rutaAvatar = modeloLeible.getAvatarJugador(propietario);
-                        if (rutaAvatar != null && !rutaAvatar.isBlank()) {
-                            URL url = getClass().getResource(rutaAvatar);
+                    // Intentar dibujar avatar
+                    String rutaAvatar = c.getPropietario().getRutaAvatar();
+                    boolean dibujado = false;
+                    if (rutaAvatar != null && !rutaAvatar.isEmpty()) {
+                        try {
+                            java.net.URL url = getClass().getResource(rutaAvatar);
                             if (url != null) {
-                                ImageIcon icon = new ImageIcon(url);
-                                int size = (int) (tamRelleno * 0.6);
-                                Image img = icon.getImage().getScaledInstance(size, size, Image.SCALE_SMOOTH);
-
-                                int imgX = cuadroX + (tamRelleno - size) / 2;
-                                int imgY = cuadroY + (tamRelleno - size) / 2;
-
-                                g2.drawImage(img, imgX, imgY, null);
-                                avatarDibujado = true;
-                            } else {
-                                System.err.println("No se encontró recurso avatar en cuadro: " + rutaAvatar);
+                                java.awt.Image img = new ImageIcon(url).getImage();
+                                int size = tamRelleno - 10;
+                                int imgX = px + offsetRelleno + 5;
+                                int imgY = py + offsetRelleno + 5;
+                                g2.drawImage(img, imgX, imgY, size, size, null);
+                                dibujado = true;
                             }
+                        } catch (Exception e) {
+                            // si falla, dibujará la letra
                         }
-                    } catch (Exception e) {
-                        System.err.println("Error cargando avatar en cuadro: " + e.getMessage());
                     }
 
-                    // Fallback: inicial del jugador si no hubo avatar
-                    if (!avatarDibujado) {
+                    if (!dibujado) {
+                        // Fallback: letra
                         g2.setColor(Color.WHITE);
                         g2.setFont(new Font("Arial", Font.BOLD, m.espacio / 2));
                         String letra = c.getPropietario().getNombre().substring(0, 1).toUpperCase();
                         int textW = g2.getFontMetrics().stringWidth(letra);
                         int textH = g2.getFontMetrics().getAscent();
                         g2.drawString(letra,
-                                cuadroX + (tamRelleno / 2) - (textW / 2),
-                                cuadroY + (tamRelleno / 2) + (textH / 4));
+                                px + (m.espacio / 2) - (textW / 2),
+                                py + (m.espacio / 2) + (textH / 4));
                     }
                 }
             }

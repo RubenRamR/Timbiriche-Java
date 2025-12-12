@@ -153,7 +153,7 @@ public class ModelView implements IModelViewLeible, IModelViewModificable, IMoto
         }
         String ruta = jugador.getRutaAvatar();
         if (ruta == null || ruta.isEmpty()) {
-            return "Presentacion/avatars/avatar1.png"; // default para no dejarlo vacío
+            return null; // sin default aquí; que GameView decida qué hacer
         }
         return ruta;
     }

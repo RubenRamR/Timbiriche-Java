@@ -119,6 +119,18 @@ public class TimbiricheApp {
             String rutaAvatar = "/avatars/avatar" + (avatarId + 1) + ".png";
             yo.setRutaAvatar(rutaAvatar);
 
+            String[] AVATAR_PATHS = {
+                "/avatars/avatar1.png",
+                "/avatars/avatar2.png",
+                "/avatars/avatar3.png",
+                "/avatars/avatar4.png"
+            };
+
+            if (avatarId >= 0 && avatarId < AVATAR_PATHS.length) {
+                yo.setRutaAvatar(AVATAR_PATHS[avatarId]);
+            } else {
+                yo.setRutaAvatar("/avatars/avatar1.png");
+            }
             System.out.println("=== CLIENTE: " + nickname + " ===");
             System.out.println("=== AVATAR ID: " + avatarId + " ===");
             System.out.println("=== RUTA AVATAR: " + rutaAvatar + " ===");

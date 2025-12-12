@@ -52,7 +52,7 @@ public class Jugador implements Serializable{
     }
 
     public void setRutaAvatar(String rutaAvatar) {
-        this.rutaAvatar = rutaAvatar;
+        this.rutaAvatar = rutaAvatar= "/avatars/";
     }
 
     public int getPuertoEscucha() {

@@ -25,11 +25,11 @@ public class RegistroJugadorView extends JFrame {
     private RegistroJugadorListener listener;
 
     // Rutas de los cuatro avatares dentro del JAR
-    private static final String[] AVATAR_PATHS = {
-        "Presentacion/avatars/avatar1.png",
-        "Presentacion/avatars/avatar2.png",
-        "Presentacion/avatars/avatar3.png",
-        "Presentacion/avatars/avatar4.png"
+    String[] AVATAR_PATHS = {
+        "/avatars/avatar1.png",
+        "/avatars/avatar2.png",
+        "/avatars/avatar3.png",
+        "/avatars/avatar4.png"
     };
 
     public RegistroJugadorView() {
