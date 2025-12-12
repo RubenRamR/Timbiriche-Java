@@ -110,4 +110,6 @@ public interface IMotorJuego {
      * Indica si estamos en lobby o en partida
      */
     boolean isEnLobby();
+    
+    
 }

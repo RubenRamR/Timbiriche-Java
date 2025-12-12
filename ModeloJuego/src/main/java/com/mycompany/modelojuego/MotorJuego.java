@@ -312,9 +312,9 @@ public class MotorJuego implements IMotorJuego {
 
     @Override
     public void solicitarInicioPartida(int dimension) {
-        System.out.println("[Motor] Enviando solicitud de inicio con dim: " + dimension);
+        System.out.println("[Motor] 📤 Enviando solicitud de inicio con dim: " + dimension);
 
-        DataDTO solicitud = new DataDTO(Protocolo.INICIO_PARTIDA);
+        DataDTO solicitud = new DataDTO(Protocolo.SOLICITUD_INICIO_PARTIDA);
 
         Map<String, Object> params = new HashMap<>();
         params.put("dimension", dimension);
@@ -323,24 +323,32 @@ public class MotorJuego implements IMotorJuego {
         solicitud.setProyectoOrigen(jugadorLocal.getNombre());
 
         notificarDespachadores(solicitud);
+        System.out.println("[Motor] ✅ Solicitud enviada");
     }
 
     @Override
     public void recibirInicioPartida(int dimension) {
-        System.out.println("[Motor] Partida iniciada con dimensión: " + dimension);
+        System.out.println("[Motor] 🎉 recibirInicioPartida() llamado - Dimensión: " + dimension);
+        System.out.println("[Motor] 🔄 Estado antes: enLobby=" + this.enLobby);
 
         this.enLobby = false;
         this.configurarTablero(dimension);
 
-        // Notificar a listeners (ModelView → Vistas)
+        System.out.println("[Motor] 🔄 Estado después: enLobby=" + this.enLobby);
+        System.out.println("[Motor] 📢 Notificando a " + listeners.size() + " listeners...");
+
+        // Notificar a listeners
         for (IMotorJuegoListener l : listeners) {
+            System.out.println("[Motor]    └─> Notificando a: " + l.getClass().getSimpleName());
             l.onPartidaIniciada(dimension);
         }
+
+        System.out.println("[Motor] ✅ Notificación completada");
     }
 
     @Override
     public void recibirRechazoInicio(String motivo) {
-        System.out.println("[Motor] Inicio rechazado: " + motivo);
+        System.out.println("[Motor] ❌ Inicio rechazado: " + motivo);
 
         for (IMotorJuegoListener l : listeners) {
             l.onInicioRechazado(motivo);
@@ -355,6 +363,7 @@ public class MotorJuego implements IMotorJuego {
     @Override
     public void setSoyHost(boolean esHost) {
         this.soyHost = esHost;
+        System.out.println("[Motor] SoyHost configurado a: " + esHost);
     }
 
     @Override

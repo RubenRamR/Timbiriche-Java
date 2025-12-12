@@ -177,7 +177,7 @@ public class TimbiricheApp {
                 return;
             }
 
-            System.out.println("[App] Recibido: " + datos.getTipo());
+            System.out.println("[App-Receptor] ✉️ Recibido: " + datos.getTipo());
 
             try {
                 Protocolo protocolo = Protocolo.valueOf(datos.getTipo());
@@ -188,14 +188,17 @@ public class TimbiricheApp {
                     // ========================================================
 
                     case LISTA_JUGADORES:
+                        System.out.println("[App-Receptor] 📋 Procesando LISTA_JUGADORES...");
                         procesarListaJugadores(datos);
                         break;
 
                     case INICIO_PARTIDA:
+                        System.out.println("[App-Receptor] 🚀 Procesando INICIO_PARTIDA...");
                         procesarInicioPartida(datos);
                         break;
 
                     case INICIO_RECHAZADO:
+                        System.out.println("[App-Receptor] ❌ Procesando INICIO_RECHAZADO...");
                         procesarRechazoInicio(datos);
                         break;
 
@@ -204,18 +207,19 @@ public class TimbiricheApp {
                     // ========================================================
                     case ACTUALIZAR_TABLERO:
                     case CUADRO_CERRADO:
+                        System.out.println("[App-Receptor] 🎮 Procesando jugada...");
                         procesarJugada(datos);
                         break;
 
                     case JUGADA_INVALIDA:
-                        System.err.println("[App] Jugada inválida rechazada por el servidor.");
+                        System.err.println("[App-Receptor] ⚠️ Jugada inválida rechazada.");
                         break;
 
                     default:
-                        System.out.println("[App] Mensaje no manejado: " + protocolo);
+                        System.out.println("[App-Receptor] ⚠️ Mensaje no manejado: " + protocolo);
                 }
             } catch (IllegalArgumentException e) {
-                System.err.println("[App] Protocolo desconocido: " + datos.getTipo());
+                System.err.println("[App-Receptor] ❌ Protocolo desconocido: " + datos.getTipo());
             }
         }
 
@@ -228,9 +232,12 @@ public class TimbiricheApp {
             if (payload instanceof List) {
                 List<Jugador> jugadores = convertirAJugadores((List<?>) payload);
 
-                System.out.println("[App] Lista actualizada: " + jugadores.size() + " jugador(es)");
+                System.out.println("[App] 📋 Lista actualizada: " + jugadores.size() + " jugador(es)");
+                for (Jugador j : jugadores) {
+                    System.out.println("   - " + j.getNombre() + " (" + j.getColor() + ")");
+                }
 
-                // Delegar al motor (que notificará al ModelView → LobbyView)
+                // Delegar al motor
                 motor.actualizarListaDeJugadores(jugadores);
             }
         }
@@ -239,7 +246,7 @@ public class TimbiricheApp {
         // PROCESAMIENTO DE INICIO DE PARTIDA
         // =====================================================================
         private void procesarInicioPartida(DataDTO datos) {
-            System.out.println("[App] ¡PARTIDA INICIADA POR EL SERVIDOR!");
+            System.out.println("[App] 🎉 ¡PARTIDA INICIADA POR EL SERVIDOR!");
 
             Object payload = datos.getPayload();
             int dimension = 10; // por defecto
@@ -248,37 +255,51 @@ public class TimbiricheApp {
                 Map<?, ?> config = (Map<?, ?>) payload;
                 if (config.containsKey("dimension")) {
                     dimension = ((Number) config.get("dimension")).intValue();
+                    System.out.println("[App] 📐 Dimensión del tablero: " + dimension);
                 }
 
                 if (config.containsKey("mensaje")) {
                     String mensaje = (String) config.get("mensaje");
-                    System.out.println("[App] Servidor dice: " + mensaje);
+                    System.out.println("[App] 💬 Servidor dice: " + mensaje);
                 }
             }
 
             final int dim = dimension;
 
+            System.out.println("[App] 🔄 Notificando al motor sobre inicio...");
             // Notificar al motor (cerrará el lobby vía ModelView)
             motor.recibirInicioPartida(dim);
 
+            System.out.println("[App] 🖥️ Programando apertura de GameView...");
             // Abrir GameView en el hilo de Swing
             SwingUtilities.invokeLater(() -> abrirGameView(dim));
         }
 
         private void abrirGameView(int dimension) {
-            System.out.println("[App] Abriendo GameView con tablero " + dimension + "x" + dimension);
+            System.out.println("[App] 🎮 Abriendo GameView con tablero " + dimension + "x" + dimension);
 
-            // Cerrar lobby si aún está abierto
-            if (lobbyView != null && lobbyView.isVisible()) {
-                lobbyView.dispose();
+            try {
+                // Cerrar lobby si aún está abierto
+                if (lobbyView != null && lobbyView.isVisible()) {
+                    System.out.println("[App] 🚪 Cerrando LobbyView...");
+                    lobbyView.dispose();
+                    lobbyView = null; // Liberar referencia
+                }
+
+                System.out.println("[App] 🏗️ Creando GameView...");
+                // Crear y mostrar GameView (usa el mismo ModelView y Controller)
+                gameView = new GameView(controller, modelView);
+                gameView.setTitle("Timbiriche - " + jugadorLocal.getNombre());
+
+                System.out.println("[App] 👁️ Mostrando GameView...");
+                gameView.setVisible(true);
+
+                System.out.println("[App] ✅ GameView iniciada exitosamente.");
+
+            } catch (Exception e) {
+                System.err.println("[App] ❌ ERROR abriendo GameView: " + e.getMessage());
+                e.printStackTrace();
             }
-
-            // Crear y mostrar GameView (usa el mismo ModelView y Controller)
-            gameView = new GameView(controller, modelView);
-            gameView.setTitle("Timbiriche - " + jugadorLocal.getNombre());
-            gameView.setVisible(true);
-
-            System.out.println("[App] GameView iniciada exitosamente.");
         }
 
         // =====================================================================
@@ -286,9 +307,9 @@ public class TimbiricheApp {
         // =====================================================================
         private void procesarRechazoInicio(DataDTO datos) {
             String motivo = (String) datos.getPayload();
-            System.out.println("[App] Inicio rechazado: " + motivo);
+            System.out.println("[App] ❌ Inicio rechazado: " + motivo);
 
-            // Notificar al motor (que notificará al ModelView → LobbyView)
+            // Notificar al motor
             motor.recibirRechazoInicio(motivo);
         }
 
