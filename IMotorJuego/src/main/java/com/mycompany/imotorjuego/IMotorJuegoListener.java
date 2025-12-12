@@ -6,6 +6,7 @@ package com.mycompany.imotorjuego;
 
 import com.mycompany.dominio.Jugador;
 import com.mycompany.dominio.Tablero;
+import java.util.List;
 
 /**
  *
@@ -18,4 +19,22 @@ public interface IMotorJuegoListener {
     void onJuegoTerminado(Jugador ganador);
 
     void onError(String mensaje);
+
+    // ============================================
+    // NUEVO: EVENTOS DE LOBBY
+    // ============================================
+    /**
+     * Notifica que la lista de jugadores cambió
+     */
+    void onListaJugadoresActualizada(List<Jugador> jugadores);
+
+    /**
+     * Notifica que la partida ha iniciado
+     */
+    void onPartidaIniciada(int dimension);
+
+    /**
+     * Notifica que el inicio fue rechazado
+     */
+    void onInicioRechazado(String motivo);
 }

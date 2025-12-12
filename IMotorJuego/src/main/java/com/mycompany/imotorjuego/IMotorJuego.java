@@ -15,7 +15,7 @@ import com.mycompany.interfacesdispatcher.IDispatcher;
  * @author rramirez
  */
 public interface IMotorJuego {
-    
+
     /**
      * El jugador local intenta hacer una jugada.
      *
@@ -74,4 +74,40 @@ public interface IMotorJuego {
      * que la UI muestre la lista.
      */
     List<Jugador> getJugadores();
+
+    /**
+     * El jugador local (host) solicita iniciar la partida
+     *
+     * @param dimension Tamaño del tablero (3-20)
+     */
+    void solicitarInicioPartida(int dimension);
+
+    /**
+     * Recibe notificación del servidor que la partida inició
+     *
+     * @param dimension Dimensión confirmada por el servidor
+     */
+    void recibirInicioPartida(int dimension);
+
+    /**
+     * Recibe notificación de que el inicio fue rechazado
+     *
+     * @param motivo Razón del rechazo
+     */
+    void recibirRechazoInicio(String motivo);
+
+    /**
+     * Indica si el jugador local es el host
+     */
+    boolean isSoyHost();
+
+    /**
+     * Configura si el jugador local es host
+     */
+    void setSoyHost(boolean esHost);
+
+    /**
+     * Indica si estamos en lobby o en partida
+     */
+    boolean isEnLobby();
 }

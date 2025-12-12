@@ -17,6 +17,7 @@ import com.mycompany.dominio.Jugador;
 import com.mycompany.protocolo.Protocolo;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +30,10 @@ public class MotorJuego implements IMotorJuego {
 
     private List<IMotorJuegoListener> listeners;
     private List<IDispatcher> dispatchers;
+
+    // NUEVO: Estado del lobby
+    private boolean enLobby = true;
+    private boolean soyHost = false;
 
     /**
      * Constructor. Inicializa el tablero y las listas.
@@ -61,8 +66,7 @@ public class MotorJuego implements IMotorJuego {
     public void setJugadorLocal(Jugador jugador) {
         this.jugadorLocal = jugador;
         // Si la lista está vacía, nos agregamos (para pruebas unitarias o modo solo)
-        if (listaJugadores.isEmpty())
-        {
+        if (listaJugadores.isEmpty()) {
             listaJugadores.add(jugador);
         }
     }
@@ -74,8 +78,7 @@ public class MotorJuego implements IMotorJuego {
     public void setListaJugadores(List<Jugador> jugadores) {
         this.listaJugadores = new ArrayList<>(jugadores);
         // Regla: El primer jugador de la lista comienza
-        if (!this.listaJugadores.isEmpty())
-        {
+        if (!this.listaJugadores.isEmpty()) {
             this.turnoActual = this.listaJugadores.get(0);
         }
         // Notificamos para que la UI se pinte inicializada
@@ -91,35 +94,29 @@ public class MotorJuego implements IMotorJuego {
     // ==========================================
     @Override
     public void registrarListener(IMotorJuegoListener listener) {
-        if (!listeners.contains(listener))
-        {
+        if (!listeners.contains(listener)) {
             listeners.add(listener);
         }
     }
 
     @Override
     public void realizarJugadaLocal(Linea linea) {
-        if (!turnoActual.getNombre().equals(jugadorLocal.getNombre()))
-        {
+        if (!turnoActual.getNombre().equals(jugadorLocal.getNombre())) {
             System.out.println("MOTOR: Clic ignorado. No es tu turno. Es turno de: " + turnoActual.getNombre());
             return;
         }
-        if (!validarJugada(linea))
-        {
+        if (!validarJugada(linea)) {
             return;
         }
 
-        try
-        {
+        try {
             DataDTO dto = new DataDTO(Protocolo.INTENTO_JUGADA);
             dto.setPayload(linea);
 
             // Asignar origen
-            if (jugadorLocal != null)
-            {
+            if (jugadorLocal != null) {
                 dto.setProyectoOrigen(jugadorLocal.getNombre());
-            } else
-            {
+            } else {
                 dto.setProyectoOrigen("Anonimo");
             }
 
@@ -128,8 +125,7 @@ public class MotorJuego implements IMotorJuego {
             // ESTO ES LO QUE ENVÍA AL SERVIDOR
             notificarDespachadores(dto);
 
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             System.err.println("Motor Error: " + e.getMessage());
         }
     }
@@ -143,27 +139,22 @@ public class MotorJuego implements IMotorJuego {
      */
     public void realizarJugadaRemota(Linea linea, Jugador jugadorRemitente) {
 
-        if (jugadorRemitente != null)
-        {
+        if (jugadorRemitente != null) {
             linea.setPropietario(jugadorRemitente);
         }
         // Agregar línea al tablero lógico
         boolean agregada = tablero.agregarLinea(linea);
 
-        if (agregada)
-        {
+        if (agregada) {
             // Verificar si se cerraron cuadros con esta línea
             int cuadrosCerrados = contarYAsignarCuadrosCerrados(linea, jugadorRemitente);
 
-            if (cuadrosCerrados > 0)
-            {
+            if (cuadrosCerrados > 0) {
                 // --- REGLA TIMBIRICHE: Cierra cuadro -> Gana puntos y REPITE turno ---
-                if (jugadorRemitente != null)
-                {
+                if (jugadorRemitente != null) {
                     jugadorRemitente.sumarPuntos(cuadrosCerrados);
                 }
-            } else
-            {
+            } else {
                 avanzarTurno();
             }
             notificarCambios();
@@ -177,28 +168,23 @@ public class MotorJuego implements IMotorJuego {
         int dim = tablero.dimension;
         int totalLineasPosibles = 2 * dim * (dim - 1);
 
-        if (tablero.lineasDibujadas.size() >= totalLineasPosibles)
-        {
+        if (tablero.lineasDibujadas.size() >= totalLineasPosibles) {
 
             Jugador ganador = null;
             int maxPuntos = -1;
 
-            for (Jugador j : listaJugadores)
-            {
-                if (j.getPuntaje() > maxPuntos)
-                {
+            for (Jugador j : listaJugadores) {
+                if (j.getPuntaje() > maxPuntos) {
                     maxPuntos = j.getPuntaje();
                     ganador = j;
-                } else if (j.getPuntaje() == maxPuntos)
-                {
+                } else if (j.getPuntaje() == maxPuntos) {
                     System.out.println("Empate");
                 }
             }
 
             System.out.println("MOTOR: Fin de juego detectado. Ganador: " + (ganador != null ? ganador.getNombre() : "Nadie"));
 
-            for (IMotorJuegoListener l : listeners)
-            {
+            for (IMotorJuegoListener l : listeners) {
                 l.onJuegoTerminado(ganador);
             }
         }
@@ -208,22 +194,19 @@ public class MotorJuego implements IMotorJuego {
      * Valida si la jugada local es legal antes de enviarla.
      */
     private boolean validarJugada(Linea linea) {
-        if (jugadorLocal == null || turnoActual == null)
-        {
+        if (jugadorLocal == null || turnoActual == null) {
             onError("La partida no ha iniciado o falta configuración.");
             return false;
         }
 
         // Regla: Turno
-        if (!jugadorLocal.getNombre().equals(turnoActual.getNombre()))
-        {
+        if (!jugadorLocal.getNombre().equals(turnoActual.getNombre())) {
             onError("No es tu turno. Espera a: " + turnoActual.getNombre());
             return false;
         }
 
         // Regla: Disponibilidad
-        if (tablero.existeLinea(linea))
-        {
+        if (tablero.existeLinea(linea)) {
             onError("Esa línea ya está ocupada.");
             return false;
         }
@@ -242,13 +225,10 @@ public class MotorJuego implements IMotorJuego {
         // También actualiza internamente el estado de los cuadros (completado=true)
         boolean huboCierre = tablero.verificarCuadroCerrado(linea);
 
-        if (huboCierre)
-        {
+        if (huboCierre) {
             // Buscamos cuáles cuadros están completos pero SIN dueño (los recién cerrados)
-            for (Cuadro c : tablero.getCuadros())
-            {
-                if (c.isCompletado() && c.getPropietario() == null)
-                {
+            for (Cuadro c : tablero.getCuadros()) {
+                if (c.isCompletado() && c.getPropietario() == null) {
                     c.setPropietario(jugador);
                     conteo++;
                 }
@@ -258,18 +238,15 @@ public class MotorJuego implements IMotorJuego {
     }
 
     private void avanzarTurno() {
-        if (listaJugadores.isEmpty())
-        {
+        if (listaJugadores.isEmpty()) {
             return;
         }
 
         int indexActual = listaJugadores.indexOf(turnoActual);
-        if (indexActual == -1)
-        {
+        if (indexActual == -1) {
             // Si por error no está, reiniciamos al primero
             turnoActual = listaJugadores.get(0);
-        } else
-        {
+        } else {
             // Rotación circular: (0 -> 1 -> 2 -> 0)
             int siguienteIndex = (indexActual + 1) % listaJugadores.size();
             turnoActual = listaJugadores.get(siguienteIndex);
@@ -277,8 +254,7 @@ public class MotorJuego implements IMotorJuego {
     }
 
     public void actualizarListaDeJugadores(List<Jugador> nuevosJugadores) {
-        if (nuevosJugadores == null || nuevosJugadores.isEmpty())
-        {
+        if (nuevosJugadores == null || nuevosJugadores.isEmpty()) {
             return;
         }
 
@@ -287,10 +263,8 @@ public class MotorJuego implements IMotorJuego {
 
         System.out.println("MOTOR: Lista sincronizada. Jugadores: " + listaJugadores.size());
 
-        if (!listaJugadores.isEmpty())
-        {
-            if (turnoActual == null || !listaJugadores.contains(turnoActual))
-            {
+        if (!listaJugadores.isEmpty()) {
+            if (turnoActual == null || !listaJugadores.contains(turnoActual)) {
                 turnoActual = listaJugadores.get(0);
             }
         }
@@ -298,22 +272,19 @@ public class MotorJuego implements IMotorJuego {
     }
 
     private void notificarCambios() {
-        for (IMotorJuegoListener l : listeners)
-        {
+        for (IMotorJuegoListener l : listeners) {
             l.onJuegoActualizado(this.tablero, this.turnoActual);
         }
     }
 
     private void notificarDespachadores(DataDTO datos) {
-        for (IDispatcher d : dispatchers)
-        {
+        for (IDispatcher d : dispatchers) {
             d.enviar(datos);
         }
     }
 
     private void onError(String msg) {
-        for (IMotorJuegoListener l : listeners)
-        {
+        for (IMotorJuegoListener l : listeners) {
             l.onError(msg);
         }
     }
@@ -337,5 +308,57 @@ public class MotorJuego implements IMotorJuego {
     @Override
     public List<Jugador> getJugadores() {
         return listaJugadores;
+    }
+
+    @Override
+    public void solicitarInicioPartida(int dimension) {
+        System.out.println("[Motor] Enviando solicitud de inicio con dim: " + dimension);
+
+        DataDTO solicitud = new DataDTO(Protocolo.INICIO_PARTIDA);
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("dimension", dimension);
+        solicitud.setPayload(params);
+
+        solicitud.setProyectoOrigen(jugadorLocal.getNombre());
+
+        notificarDespachadores(solicitud);
+    }
+
+    @Override
+    public void recibirInicioPartida(int dimension) {
+        System.out.println("[Motor] Partida iniciada con dimensión: " + dimension);
+
+        this.enLobby = false;
+        this.configurarTablero(dimension);
+
+        // Notificar a listeners (ModelView → Vistas)
+        for (IMotorJuegoListener l : listeners) {
+            l.onPartidaIniciada(dimension);
+        }
+    }
+
+    @Override
+    public void recibirRechazoInicio(String motivo) {
+        System.out.println("[Motor] Inicio rechazado: " + motivo);
+
+        for (IMotorJuegoListener l : listeners) {
+            l.onInicioRechazado(motivo);
+        }
+    }
+
+    @Override
+    public boolean isSoyHost() {
+        return this.soyHost;
+    }
+
+    @Override
+    public void setSoyHost(boolean esHost) {
+        this.soyHost = esHost;
+    }
+
+    @Override
+    public boolean isEnLobby() {
+        return this.enLobby;
     }
 }
