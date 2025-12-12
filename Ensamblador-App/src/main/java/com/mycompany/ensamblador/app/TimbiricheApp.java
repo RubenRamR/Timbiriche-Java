@@ -7,29 +7,19 @@ package com.mycompany.ensamblador.app;
  *
  * @author rramirez
  */
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
 import com.mycompany.componentered.FabricaRED;
 import com.mycompany.dominio.Jugador;
-import com.mycompany.dominio.Linea;
-import com.mycompany.dominio.Punto;
 import com.mycompany.dtos.DataDTO;
 import com.mycompany.interfacesdispatcher.IDispatcher;
 import com.mycompany.interfacesreceptor.IReceptorExterno;
 import com.mycompany.modelojuego.MotorJuego;
 import com.mycompany.modelojuego.ReceptorExternoImpl;
-import java.awt.Color;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import timbiriche.presentacion.ControllerView;
 import timbiriche.presentacion.GameView;
-import timbiriche.presentacion.IModelViewLeible;
-import timbiriche.presentacion.IModelViewModificable;
 import timbiriche.presentacion.ModelView;
 
 /**
@@ -62,12 +52,8 @@ public class TimbiricheApp {
                 
                 Jugador yo = new Jugador(nombre, hexColor);
                 
-                // =========================================================
-                // ¡¡IMPORTANTE!!: AVISAR AL JUGADOR EN QUÉ PUERTO ESCUCHA
-                // =========================================================
-                // Si no pones esto, el servidor no sabrá a dónde responder
+                
                 yo.setPuertoEscucha(puertoCliente); 
-                // =========================================================
                 
                 System.out.println("=== CLIENTE: " + nombre + " ===");
                 System.out.println("=== ESCUCHANDO EN PUERTO: " + puertoCliente + " ===");
